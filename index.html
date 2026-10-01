@@ -1,0 +1,2442 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SHARDS</title>
+    <style>
+      :root {
+        --bg: #050508;
+        --glass-line: rgba(255, 255, 255, 0.38);
+        --glass-glow: rgba(255, 255, 255, 0.09);
+        --text-main: #f1f5f9;
+        --text-dim: #94a3b8;
+        --star-color: #f59e0b;
+        --star-glow: rgba(245, 158, 11, 0.85);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        user-select: none;
+      }
+
+      body {
+        background-color: var(--bg);
+        color: var(--text-main);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          sans-serif;
+        min-height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* ================================
+       INTRO OVERLAY (SOUL -> DUST -> cracks)
+       Sits on top of everything else at z-index 50.
+       Fades itself out at the end to reveal the
+       constellation, which has been rendering
+       underneath, untouched, the whole time.
+    ================================ */
+
+      .intro-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 2.2s ease;
+      }
+
+      .intro-overlay.intro-hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .intro-overlay.intro-faded {
+        /* only the reading screens fade — the crack svg and dot
+         are pulled out of this fade separately, see below */
+        pointer-events: none;
+      }
+
+      .reading-screen {
+        position: relative;
+        max-width: 640px;
+        padding: 2.5rem;
+        text-align: center;
+        opacity: 1;
+        transition: opacity 1.6s ease;
+      }
+
+      .reading-screen.reading-hidden {
+        opacity: 0;
+        pointer-events: none;
+        position: absolute;
+      }
+
+      .reading-title {
+        font-family: Georgia, serif;
+        font-size: clamp(1.8rem, 4vw, 3rem);
+        font-weight: 400;
+        letter-spacing: 0.4em;
+        text-indent: 0.4em;
+        color: rgba(241, 245, 249, 0.9);
+        cursor: pointer;
+        background: transparent;
+        border: 0;
+        padding: 1rem;
+        transition: opacity 0.4s ease, letter-spacing 0.4s ease;
+      }
+
+      .reading-title:hover {
+        opacity: 0.65;
+        letter-spacing: 0.5em;
+      }
+
+      .reading-body {
+        font-family: Georgia, serif;
+        line-height: 1.9;
+        font-size: 1.05rem;
+        color: rgba(203, 213, 225, 0.92);
+        white-space: pre-line;
+        max-height: 62vh;
+        overflow-y: auto;
+        margin-bottom: 2rem;
+        padding: 0 0.5rem;
+      }
+
+      .enter-btn {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        color: var(--text-dim);
+        font-size: 0.75rem;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        padding: 0.6rem 1.6rem;
+        border-radius: 9999px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        opacity: 0;
+        animation: enterFadeIn 1.4s ease forwards;
+        animation-delay: 2.6s;
+      }
+
+      .enter-btn:hover {
+        color: #fff;
+        border-color: rgba(255, 255, 255, 0.6);
+      }
+
+      @keyframes enterFadeIn {
+        to {
+          opacity: 1;
+        }
+      }
+
+      /* The real artwork stays invisible and unclickable until
+       the constellation shatters into view. */
+      .reveal-target {
+        opacity: 0;
+        transition: opacity 2s ease;
+      }
+
+      .reveal-target.revealed {
+        opacity: 1;
+      }
+
+      .shard-avatar {
+        position: fixed;
+        bottom: 2.5rem;
+        left: 2.5rem;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 0;
+        background: var(--star-color);
+        cursor: pointer;
+        z-index: 15;
+        filter: drop-shadow(0 0 6px var(--star-glow));
+        animation: shardAvatarDrift 9s ease-in-out infinite,
+          shardAvatarPulse 4.5s ease-in-out infinite;
+        transition: background 2s ease, filter 2s ease;
+      }
+
+      .shard-avatar.all-witnessed {
+        background: #f8fafc;
+        filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
+        animation: shardAvatarDrift 9s ease-in-out infinite;
+      }
+
+      @keyframes shardAvatarDrift {
+        0%,
+        100% {
+          transform: translate(0, 0);
+        }
+        50% {
+          transform: translate(6px, -8px);
+        }
+      }
+
+      @keyframes shardAvatarPulse {
+        0%,
+        100% {
+          opacity: 0.55;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+
+      .witness-message {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: Georgia, serif;
+        font-size: clamp(1.2rem, 3vw, 1.8rem);
+        letter-spacing: 0.15em;
+        color: rgba(241, 245, 249, 0.75);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 3s ease;
+      }
+
+      .witness-message.visible {
+        opacity: 1;
+      }
+
+      /* ================================
+       EXISTING ARTWORK (unchanged below)
+    ================================ */
+
+      #dust-canvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 10;
+        padding: 2rem 3rem;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 1.4rem;
+        pointer-events: none;
+      }
+
+      .sound-btn {
+        pointer-events: auto;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: var(--text-dim);
+        padding: 0.5rem 1.1rem;
+        font-size: 0.72rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        border-radius: 9999px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        backdrop-filter: blur(8px);
+      }
+
+      .sound-btn:hover {
+        color: var(--text-main);
+        border-color: rgba(255, 255, 255, 0.45);
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+      }
+
+      .sound-indicator {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: #64748b;
+      }
+
+      .sound-btn.active .sound-indicator {
+        background-color: var(--star-color);
+        box-shadow: 0 0 8px var(--star-glow);
+      }
+
+      .hero-prologue {
+        pointer-events: auto;
+        display: inline-block;
+        border: 0;
+        background: transparent;
+        font-family: inherit;
+        color: var(--text-dim);
+        font-size: 0.8rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        padding: 0.3rem 0.8rem;
+      }
+
+      .hero-prologue:hover {
+        color: #ffffff;
+        letter-spacing: 0.34em;
+        text-shadow: 0 0 12px rgba(255, 255, 255, 0.8),
+          0 0 20px var(--star-glow);
+      }
+
+      .mirror-container {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 3;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+      }
+
+      .mirror-container.mesh-visible {
+        opacity: 1;
+      }
+
+      svg.glass-svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      .shard-polygon {
+        fill: rgba(255, 255, 255, 0.015);
+        stroke: var(--glass-line);
+        stroke-width: 1.1px;
+        cursor: pointer;
+        transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        vector-effect: non-scaling-stroke;
+        filter: url(#crackWobble);
+      }
+
+      .shard-group:hover .shard-polygon {
+        fill: var(--glass-glow);
+        stroke: rgba(255, 255, 255, 0.9);
+        filter: drop-shadow(0 0 18px rgba(245, 158, 11, 0.3));
+      }
+
+      .star-node {
+        /* Hidden for now — a glowing point at every vertex reads as
+         "constellation" rather than "screen breaking." The
+         read/unread logic below still runs, it's just not
+         rendered until/unless this is turned back on. */
+        display: none;
+      }
+
+      /* A witnessed shard's interior brightens slightly — not
+       "fixed," just no longer sitting in the dark unseen. */
+      .shard-polygon.witnessed {
+        fill: rgba(255, 255, 255, 0.055);
+        transition: fill 1.6s ease;
+      }
+
+      /* Stars that are earned by being read, one shard at a time,
+       until the whole mesh reads as a constellation. Persistent —
+       these don't fade back out. */
+      .corner-star {
+        fill: #f8fafc;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 1.6s ease;
+        filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.75));
+      }
+
+      .shard-label {
+        font-size: 10px;
+        fill: var(--text-dim);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          sans-serif;
+        letter-spacing: 0.18em;
+        pointer-events: none;
+        text-transform: lowercase;
+        text-anchor: middle;
+        dominant-baseline: middle;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .shard-group:hover .shard-label {
+        opacity: 1;
+        fill: #ffffff;
+        font-weight: 600;
+        letter-spacing: 0.24em;
+        text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+      }
+
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(4, 4, 7, 0.88);
+        backdrop-filter: blur(14px);
+        z-index: 20;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.4s ease;
+        padding: 2rem;
+      }
+
+      .modal-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .modal-card {
+        background: rgba(15, 15, 23, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8),
+          0 0 30px rgba(245, 158, 11, 0.1);
+        border-radius: 6px;
+        max-width: 600px;
+        width: 100%;
+        max-height: 80vh;
+        overflow-y: auto;
+        padding: 3rem;
+        position: relative;
+        transform: translateY(20px);
+        transition: transform 0.4s ease;
+      }
+
+      .modal-overlay.open .modal-card {
+        transform: translateY(0);
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        background: transparent;
+        border: none;
+        color: var(--text-dim);
+        font-size: 1.25rem;
+        cursor: pointer;
+        transition: color 0.2s;
+      }
+
+      .modal-close:hover {
+        color: var(--text-main);
+      }
+
+      .modal-tag {
+        font-size: 0.75rem;
+        letter-spacing: 0.25em;
+        color: var(--star-color);
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+      }
+
+      .modal-title {
+        font-family: Georgia, serif;
+        font-size: 2rem;
+        font-weight: 300;
+        margin-bottom: 1.5rem;
+        color: var(--text-main);
+      }
+
+      .modal-body {
+        font-family: Georgia, serif;
+        line-height: 1.8;
+        color: #cbd5e1;
+        font-size: 1rem;
+        white-space: pre-line;
+      }
+
+      /* Thin, dark scrollbar wherever long text scrolls — the
+       default browser one looks out of place against this design. */
+      .modal-card,
+      .reading-body {
+        scrollbar-width: thin;
+        scrollbar-color: #0a0a0c transparent;
+      }
+
+      .modal-card::-webkit-scrollbar,
+      .reading-body::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      .modal-card::-webkit-scrollbar-track,
+      .reading-body::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .modal-card::-webkit-scrollbar-thumb,
+      .reading-body::-webkit-scrollbar-thumb {
+        background-color: #0a0a0c;
+        border-radius: 9999px;
+      }
+
+      .modal-card::-webkit-scrollbar-thumb:hover,
+      .reading-body::-webkit-scrollbar-thumb:hover {
+        background-color: #000000;
+      }
+
+      @media (max-width: 768px) {
+        .modal-card {
+          padding: 2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ================================
+       INTRO OVERLAY (new)
+       ================================ -->
+    <div class="intro-overlay" id="introOverlay">
+      <div class="reading-screen" id="stageSoul">
+        <button class="reading-title" id="introSoulBtn">SOUL</button>
+      </div>
+
+      <div class="reading-screen reading-hidden" id="stageIntro">
+        <div class="reading-body" id="introBodyText"></div>
+        <button class="enter-btn" id="introEnterBtn">Enter</button>
+      </div>
+    </div>
+
+    <canvas id="dust-canvas"></canvas>
+    <button
+      class="shard-avatar reveal-target"
+      id="shardAvatarBtn"
+      aria-label="A soul of its own"
+    ></button>
+
+    <header class="reveal-target">
+      <button class="hero-prologue" id="prologueBtn">Prologue</button>
+      <button class="sound-btn" id="soundToggle">
+        <span class="sound-indicator"></span>
+        <span id="soundLabel">Soundscape Off</span>
+      </button>
+    </header>
+
+    <div class="mirror-container">
+      <svg
+        class="glass-svg"
+        viewBox="0 0 1600 900"
+        preserveAspectRatio="xMidYMid slice"
+      >
+        <defs>
+          <filter id="crackWobble" x="-30%" y="-30%" width="160%" height="160%">
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.012 0.018"
+              numOctaves="2"
+              seed="7"
+              result="noise"
+            />
+            <feDisplacementMap
+              in="SourceGraphic"
+              in2="noise"
+              xChannelSelector="R"
+              yChannelSelector="G"
+              scale="10"
+            >
+              <animate
+                id="crackWobbleAnim"
+                attributeName="scale"
+                from="10"
+                to="0"
+                dur="11s"
+                begin="indefinite"
+                fill="freeze"
+              />
+            </feDisplacementMap>
+          </filter>
+        </defs>
+
+        <!-- SHARD 1 (Top Left Edge) -->
+        <g class="shard-group" onclick="openShard(0)">
+          <polygon class="shard-polygon" points="0,0 480,0 260,180 0,310" />
+          <circle class="star-node" cx="260" cy="180" r="3.5" />
+          <text x="180" y="110" class="shard-label">shard n°1</text>
+        </g>
+
+        <!-- SHARD 2 (Top Center-Left Edge) -->
+        <g class="shard-group" onclick="openShard(1)">
+          <polygon class="shard-polygon" points="480,0 920,0 710,130 260,180" />
+          <circle class="star-node" cx="710" cy="130" r="4" />
+          <text x="580" y="70" class="shard-label">shard n°2</text>
+        </g>
+
+        <!-- SHARD 3 (Top Right Edge) -->
+        <g class="shard-group" onclick="openShard(2)">
+          <polygon
+            class="shard-polygon"
+            points="920,0 1600,0 1280,210 710,130"
+          />
+          <circle class="star-node" cx="1280" cy="210" r="3.5" />
+          <text x="1120" y="90" class="shard-label">shard n°3</text>
+        </g>
+
+        <!-- SHARD 4 (Upper Left Inner Impact) -->
+        <g class="shard-group" onclick="openShard(3)">
+          <polygon
+            class="shard-polygon"
+            points="0,310 260,180 430,340 180,480 0,420"
+          />
+          <circle class="star-node" cx="430" cy="340" r="4.5" />
+          <text x="210" y="320" class="shard-label">shard n°4</text>
+        </g>
+
+        <!-- SHARD 5 (Top Center Focal Fragment) -->
+        <g class="shard-group" onclick="openShard(4)">
+          <polygon
+            class="shard-polygon"
+            points="260,180 710,130 590,290 430,340"
+          />
+          <circle class="star-node" cx="590" cy="290" r="3.5" />
+          <text x="490" y="235" class="shard-label">shard n°5</text>
+        </g>
+
+        <!-- SHARD 6 (Top Right Inner Fragment) -->
+        <g class="shard-group" onclick="openShard(5)">
+          <polygon
+            class="shard-polygon"
+            points="710,130 1280,210 1020,330 590,290"
+          />
+          <circle class="star-node" cx="1020" cy="330" r="4" />
+          <text x="880" y="225" class="shard-label">shard n°6</text>
+        </g>
+
+        <!-- SHARD 7 (Far Right Upper Edge) -->
+        <g class="shard-group" onclick="openShard(6)">
+          <polygon
+            class="shard-polygon"
+            points="1280,210 1600,0 1600,380 1390,390 1020,330"
+          />
+          <circle class="star-node" cx="1390" cy="390" r="3.5" />
+          <text x="1410" y="230" class="shard-label">shard n°7</text>
+        </g>
+
+        <!-- SHARD 8 (Center Left Fracture) -->
+        <g class="shard-group" onclick="openShard(7)">
+          <polygon
+            class="shard-polygon"
+            points="180,480 430,340 590,290 510,510"
+          />
+          <circle class="star-node" cx="510" cy="510" r="4" />
+          <text x="420" y="420" class="shard-label">shard n°8</text>
+        </g>
+
+        <!-- SHARD 9 (Center Right Fracture) -->
+        <g class="shard-group" onclick="openShard(8)">
+          <polygon
+            class="shard-polygon"
+            points="590,290 1020,330 1140,520 510,510"
+          />
+          <circle class="star-node" cx="1140" cy="520" r="4" />
+          <text x="810" y="410" class="shard-label">shard n°9</text>
+        </g>
+
+        <!-- SHARD 10 (Far Right Middle Fracture) -->
+        <g class="shard-group" onclick="openShard(9)">
+          <polygon
+            class="shard-polygon"
+            points="1020,330 1390,390 1600,380 1600,560 1140,520"
+          />
+          <circle class="star-node" cx="1600" cy="560" r="3.5" />
+          <text x="1420" y="460" class="shard-label">shard n°10</text>
+        </g>
+
+        <!-- SHARD 11 (Far Left Middle Edge) -->
+        <g class="shard-group" onclick="openShard(10)">
+          <polygon class="shard-polygon" points="0,420 180,480 230,680 0,650" />
+          <circle class="star-node" cx="230" cy="680" r="3.5" />
+          <text x="110" y="550" class="shard-label">shard n°11</text>
+        </g>
+
+        <!-- SHARD 12 (Lower-Left Inner Fracture) -->
+        <g class="shard-group" onclick="openShard(11)">
+          <polygon
+            class="shard-polygon"
+            points="180,480 510,510 390,710 230,680"
+          />
+          <circle class="star-node" cx="390" cy="710" r="4" />
+          <text x="320" y="585" class="shard-label">shard n°12</text>
+        </g>
+
+        <!-- SHARD 13 (Lower-Center Inner Node) -->
+        <g class="shard-group" onclick="openShard(12)">
+          <polygon
+            class="shard-polygon"
+            points="510,510 1140,520 890,730 390,710"
+          />
+          <circle class="star-node" cx="890" cy="730" r="4.5" />
+          <text x="680" y="615" class="shard-label">shard n°13</text>
+        </g>
+
+        <!-- SHARD 14 (Lower-Right Inner Sharp Splinter) -->
+        <g class="shard-group" onclick="openShard(13)">
+          <polygon
+            class="shard-polygon"
+            points="1140,520 1600,560 1370,720 890,730"
+          />
+          <circle class="star-node" cx="1370" cy="720" r="4" />
+          <text x="1200" y="620" class="shard-label">shard n°14</text>
+        </g>
+
+        <!-- SHARD 15 (Far Right Bottom Edge) -->
+        <g class="shard-group" onclick="openShard(14)">
+          <polygon
+            class="shard-polygon"
+            points="1600,560 1600,900 1480,900 1370,720"
+          />
+          <circle class="star-node" cx="1480" cy="900" r="3.5" />
+          <text x="1510" y="730" class="shard-label">shard n°15</text>
+        </g>
+
+        <!-- SHARD 16 (Bottom Left Edge Point) -->
+        <g class="shard-group" onclick="openShard(15)">
+          <polygon class="shard-polygon" points="0,650 230,680 190,900 0,900" />
+          <circle class="star-node" cx="190" cy="900" r="3.5" />
+          <text x="95" y="780" class="shard-label">shard n°16</text>
+        </g>
+
+        <!-- SHARD 17 (Bottom-Left Radial Shard) -->
+        <g class="shard-group" onclick="openShard(16)">
+          <polygon
+            class="shard-polygon"
+            points="230,680 390,710 490,900 190,900"
+          />
+          <circle class="star-node" cx="490" cy="900" r="4" />
+          <text x="320" y="800" class="shard-label">shard n°17</text>
+        </g>
+
+        <!-- SHARD 18 (Bottom Center Needle Shard) -->
+        <g class="shard-group" onclick="openShard(17)">
+          <polygon
+            class="shard-polygon"
+            points="390,710 890,730 670,900 490,900"
+          />
+          <circle class="star-node" cx="670" cy="900" r="4" />
+          <text x="590" y="810" class="shard-label">shard n°18</text>
+        </g>
+
+        <!-- SHARD 19 (Bottom Center-Right Wedge) -->
+        <g class="shard-group" onclick="openShard(18)">
+          <polygon class="shard-polygon" points="890,730 1120,900 670,900" />
+          <circle class="star-node" cx="1120" cy="900" r="4" />
+          <text x="890" y="840" class="shard-label">shard n°19</text>
+        </g>
+
+        <!-- SHARD 20 (Bottom Right Wedge) -->
+        <g class="shard-group" onclick="openShard(19)">
+          <polygon class="shard-polygon" points="890,730 1370,720 1120,900" />
+          <text x="1110" y="785" class="shard-label">shard n°20</text>
+        </g>
+
+        <!-- SHARD 21 (Bottom Corner Right Fragment) -->
+        <g class="shard-group" onclick="openShard(20)">
+          <polygon class="shard-polygon" points="1370,720 1480,900 1120,900" />
+          <text x="1320" y="840" class="shard-label">shard n°21</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="witness-message" id="witnessMessage">you saw me.</div>
+
+    <div class="modal-overlay" id="readerModal">
+      <div class="modal-card">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <div class="modal-tag" id="modalTag">shard n°1</div>
+        <h2 class="modal-title" id="modalTitle">Poem Title</h2>
+        <div class="modal-body" id="modalBody">Poem content goes here...</div>
+      </div>
+    </div>
+
+    <script>
+      const SHARDS_DATA = [
+        {
+          tag: 'shard n°1',
+          title: 'run',
+          text: `I put on a t-shirt I find lying around, some shorts, and run towards the door.
+I open it wide and run into the world of nature and beautiful chaos.
+
+Blink.
+
+I barely open my eyes before a sigh escapes me.
+I put on a shirt I folded away in my dresser. I find the jeans I planned to wear last night. I slip into some shoes that make me look pretty.
+I stand in front of the door.
+I hesitate.
+The world seems too boring, too fast, too shallow, too messy.
+Suffocating chaos.
+I go back to bed.
+Again.
+
+
+`,
+        },
+        {
+          tag: 'shard n°2',
+          title: 'outside',
+          text: `I grab my keys in my hand.
+The sharp edge of the big key scratches my palm. Blood appears. I rub it onto my jeans and hurry to put on my shoes.
+I want to leave.
+I want to escape before the voice inside my head forces me back to bed.
+Again.
+I run down the stairs.
+My steps become heavier.
+The bitterness reaches my throat.
+It makes my face blue.
+I rush to open the main door.
+Then another.
+Why are there so many doors in this building?
+Finally, I come face to face with the world.
+A person walking their dog.
+An old lady crossing the street.
+A person in one car yelling at the person in another for driving too slowly.
+I walk.
+I wonder if they notice my big red eyes.
+If they can see that my heart is bleeding.
+I bet they think I smoked weed.
+That's what they usually think when they see young people with red eyes and tears in public.
+Then I wonder about them.
+What is the story of these people?
+Have they gone through what I'm going through?
+Will they?
+Have they ever experienced a love that broke them?
+In my mind, I am crumbling onto the floor.
+I am curled up in a foetal position, crying my eyes out, screaming my heart out.
+Outside, I smile at the old lady.
+“Have a nice day.”
+Suddenly, a little girl with big green eyes points at the blood on my jeans.
+“You hurt.”
+`,
+        },
+        {
+          tag: 'shard n°3',
+          title: 'the dead living',
+          text: `One.
+          Two.
+                Three.
+
+                      One breath.
+            Two breaths.
+      Three.
+Tears.
+
+How many buckets full of tears are enough for you to see my love?
+
+You grab the sharpest fa zan, digging holes in every single one.
+
+I stare at Grandma's picture on the wall.
+
+I reach for it from the puddle of this salted human water on the floor.
+
+Can she see me?
+
+Is she hurting, looking at me from above?
+
+Or is she screaming at me? At the shell of a person I've become?
+
+I am shameless.
+
+I touch her face through the cold glass and beg her to ask for help for me, wherever she is now, up above.
+
+I am gutless.
+
+I whisper, please.
+
+I tell her to make it stop.
+
+I ask a dead person to save me.
+
+One breath.
+
+      Two breaths.
+
+            Three.
+
+Grandma, can you please see me?
+
+`,
+        },
+        {
+          tag: 'shard n°4',
+          title: 'pathetic',
+          text: `Here.
+
+My heart.
+My eyes.
+My arms.
+My lungs.
+My intestines.
+My ears.
+My throat.
+
+Do you want something more?
+
+Wait.
+
+Here, my soul.
+
+What?
+
+Why are you going?
+
+Look, it's all for you.
+And more.
+
+You want my brains?
+Sure.
+
+Oh, you don't have to give me anything in return.
+
+I love you.
+
+So that's all I ask for.
+
+`,
+        },
+        {
+          tag: 'shard n°5',
+          title: 'cut',
+          text: `Cut.
+Cut.
+Cut.
+
+Big chunks of hair
+fall and cover my bony toes.
+
+Cut.
+Cut.
+Cut.
+
+You said
+you liked my hair long.
+
+Cut.
+Cut.
+Cut.
+
+Ouch.
+
+I suck the blood
+from my pinky-promise finger.
+
+Cut.
+Cut.
+Cut.
+
+Until the scissors
+won't work anymore.
+`,
+        },
+        {
+          tag: 'shard n°6',
+          title: 'when does it happen?',
+          text: `The cup overflows.
+The sink chokes.
+The string strains.
+The nails bleed.
+The hair tangles.
+The teeth grind.
+The jaw locks.
+The tears burn.
+The mind goes static.
+The feet stumble.
+The hand trembles.
+The puzzle slips.
+The last piece falls.
+The last strand of hope snaps.
+
+Never.
+
+`,
+        },
+        {
+          tag: 'shard n°7',
+          title: 'waiting',
+          text: `10 AM
+
+You must still be getting ready.
+You stayed up too late.
+
+11 AM
+
+You must've just woken up.
+Rushing around your room,
+looking for that shirt.
+
+12 PM
+
+You must've stopped for coffee.
+You never leave without coffee.
+
+1 PM
+
+You must be getting ready to leave.
+Always too long choosing what to wear.
+
+2 PM
+
+You said we'd meet here.
+Beside the dark-blue river.
+Where the swans dance.
+Under the bridge.
+
+You're not here.
+
+3 PM
+
+You must've slept too late.
+Rushing since morning.
+Coffee.
+Buttons.
+
+4 PM
+
+You must've missed the bus.
+Waiting for the next one.
+
+5 PM
+
+You must've forgotten your wallet.
+Thrown off.
+Waiting again.
+
+6 PM
+
+You must've tried to call.
+Phone died.
+
+7 PM
+
+You must be worried about me.
+Sure I'm still here.
+
+You're right.
+
+8 PM
+
+Waiting.
+
+9 PM
+
+You must've gotten hungry.
+Street food.
+Anything to reach me.
+
+10 PM
+
+You must've found another way.
+Someone offered you a ride.
+
+11 PM
+
+You must be almost here.
+Traffic.
+Wrong road.
+
+12 AM
+
+You must've fallen asleep
+on the way.
+
+Dreaming of the river.
+
+Dreaming of the swans.
+
+Dreaming of me.`,
+        },
+        {
+          tag: 'shard n°8',
+          title: 'gate 6',
+          text: `Here I am, today.
+
+Standing in front of the giant departures board, the one that makes your neck pinch while you search for your destination.
+At least that's one certainty.
+
+Look at me, Mom.
+Am I a fool?
+Or am I brave?
+
+Which one fits me better than these uncomfortable shoes I've been wearing all day?
+
+Look at me.
+Heading straight into the unknown.
+Jumping off a cliff without knowing if there's a bottom.
+Hanging my whole weight from a thread already beginning to fray.
+Throwing my heart into the recycling bin, hoping it comes back less broken.
+Diving headfirst into the cold water of maybe.
+
+Waiting for a hug I wish was more.
+Waiting for my dreams outside the door of a shop that's already closed.
+
+Look at me.
+
+Pretending I've got my life under control.
+
+Legs shaking.
+Heart on sleeve.
+Chest collapsing.
+Teeth grinding, trying to keep these traitorous tears in.
+
+Look at me.
+
+The fool who would do anything for love.
+
+Look at me.
+
+The one who thrives when she's in love, but survives when she's not.
+
+Look at me, grandma.
+
+Heels over head.
+Right onto the concrete.
+`,
+        },
+        {
+          tag: 'shard n°9',
+          title: 'Sylvia Plath',
+          text: `I look at the sky.
+
+Nothing's there.
+
+I was never the person to pray.
+But here I am—
+down on my knees,
+hands interlocked,
+forehead on my knuckles,
+elbows on the bed.
+
+Praying.
+
+Can anyone hear me?
+
+I look at myself in the mirror.
+Hollow.
+Abyss.
+Green.
+Scarlet.
+Blue.
+A face
+carved by sleepless nights.
+Skin
+stretched thin
+over bones
+I don't remember meeting.
+
+I look at the sky.
+
+Again.
+
+I pray for something.
+
+Anything.
+
+I don't know what.
+
+Grandma,
+if you were here,
+I'd tuck my bony self
+into your arms,
+the skin of my face
+caressed by the cashmere
+of your shirt.
+
+Grandma,
+can I come?
+`,
+        },
+        {
+          tag: 'shard n°10',
+          title: 'How-To: Stay Alive',
+          text: `Standing on the porch first thing in the morning.
+Looking at the green beyond the porch.
+My feet feeling the cold concrete.
+A fresh breeze
+caressing my neck.
+The smell of fresh grass
+in the morning.
+The sun rising
+before my eyes
+have barely opened.
+The colours of the sky
+reflected in my irises.
+The sound of crickets
+whispering secrets.
+Pollen
+floating through the air.
+The sound of my favourite childhood show
+coming from the living room.
+The bike
+waiting for me
+to go out for a ride.
+The notebook
+waiting for my handwriting.
+That friend
+waiting for my knock
+on their window
+to go out.
+The smell of food
+on the kitchen table
+that Mom made for me.
+Painting with bare hands.
+Loving completely
+and wholeheartedly.
+Picking flowers from the grass
+and feeling bad about it.
+Crying at the saddest movie
+and still wanting to watch it again,
+no matter how much
+it breaks my heart.
+Getting a letter
+from an old friend.
+New people to meet.
+New stories to learn.
+New places and humans
+to put all this love into.
+`,
+        },
+        {
+          tag: 'shard n°11',
+          title: 'porcelain doll',
+          text: `And suddenly, I was there.
+
+In front of you.
+
+And the pain was smaller
+than it had been the day before.
+The glasses had just dropped.
+The colours were changing.
+Becoming what they really were.
+
+Less vibrant
+than I'd seen them the day before.
+
+You told me nobody was going to love me.
+
+I looked you dead in the eyes.
+I thought it would hurt so badly.
+I thought I'd fall to my knees again,
+begging you to tell me you did.
+
+But I didn't.
+
+Something inside me
+felt like mine again.
+
+I started noticing your flaws.
+
+That porcelain skin of yours
+had microscopic cracks
+I'd somehow missed.
+
+And then I understood.
+I'd been painting over your cracks all along.
+`,
+        },
+        {
+          tag: 'shard n°12',
+          title: 'free',
+          text: `We walk down the stairs.
+Our puffy jackets
+rub against each other,
+a thin barrier
+against the electricity
+between our bodies.
+
+Under the bridge,
+green moss claims
+the cold stones
+as its kingdom.
+
+Swans dance
+under the moonlit sky.
+Stars waltz on the Moselle
+as if a ball were taking place.
+
+Maybe it was.
+
+Music from the cafés
+open late for students
+echoes in our ears.
+
+We stop.
+
+Our eyes lock.
+
+You whisper,
+“Show me.”
+You close your eyes.
+And there it is.
+Our first second kiss.
+
+You look up at the sky
+and shout,
+
+“I am alive!”
+.
+.
+.
+Blink.
+.
+.
+.
+I walk down the stairs.
+
+Music in my ears.
+Old ladies pass by,
+shaking their heads
+at the noise.
+
+I stop.
+
+The ball.
+The kiss.
+Five hundred metres away.
+
+I feel remorse.
+I forgot?
+
+I forgot.
+
+I spread my arms.
+My shadow grows wings.
+
+I look up at the sky.
+I shout,
+
+“I am free.”
+
+I look at the swans.
+Those beautiful,
+devious creatures.
+I whisper,
+
+“Not this time.”
+`,
+        },
+        {
+          tag: 'shard n°13',
+          title: 'you are poison in my morning coffee',
+          text: `What is this?
+
+This thing where one day
+I could touch the sky,
+and the next,
+the cold concrete
+beside the bed
+feels terrifying.
+
+This thing
+where I want to let you go,
+and then
+I fall to my knees,
+begging
+for one more day.
+
+This thing
+where I see
+the poison
+in my morning coffee,
+and still
+I drink it.
+
+This thing
+where I've found
+every reason
+to leave,
+and still
+I close the book,
+and walk
+the same road
+I've walked
+a hundred times.
+`,
+        },
+        {
+          tag: 'shard n°14',
+          title: 'us, u, me',
+          text: `Maybe I could live on my own.
+
+Inside my own little cocoon.
+
+Maybe I could do the things
+I want to do
+without waiting for anyone.
+
+For u.
+
+Maybe I could be excited
+about my own life.
+
+I could walk away
+without fear.
+
+Without regret.
+
+I gave everything for u.
+
+My sleep.
+My hunger.
+My time.
+My tears.
+My sanity.
+
+Almost gave up my life for u.
+
+Just a letter in the alphabet.
+`,
+        },
+        {
+          tag: 'shard n°15',
+          title: 'relapse',
+          text: `I fall down on my knees.
+
+          I scream. 
+
+          I cry.
+
+          I say,
+
+          Look, all this is for you,
+All my body parts laying on the table of our living room.
+
+Look, all this is for you,
+My soul, my spirit, my sanity.
+
+But you’re already halfway out the door,
+Locking eyes with another shadow with big eyelashes and black eyes. 
+
+And there I stand,
+
+Bodiless.
+
+Soulless.
+`,
+        },
+        {
+          tag: 'shard n°16',
+          title: 'the 2-processions',
+          text: `Last night,
+
+my subconscious gave back a piece of my soul I thought I'd lost forever.
+
+In the dream, the world was divided into two processions.
+Two crowds. Two ways of being.
+To my left—the shadows.
+Black suits.
+Slow footsteps.
+Straight backs.
+Faces drained of colour.
+A solemn parade of people who had forgotten how to laugh.
+Joy was childish.
+Laughter, 
+beneath them.
+And there you were.
+My back to yours.
+Your back to me.
+Walking deeper into the darkness you had built around yourself.
+
+I looked at you.
+And for the first time, there was no anger.
+No ache.
+No desperate need
+to be seen.
+Only pity.
+A quiet kind.
+You were trapped in a world that refused to let the light in.
+
+So I turned away.
+And stepped into my own procession.
+Colour.
+Sunlight.
+Laughter.
+Running.
+Playing.
+People with their arms thrown carelessly around each other.
+People alive.
+I was wearing a beautiful dress.
+I felt weightless.
+I felt like myself.
+And beside me—a girl.
+Radiant.
+Striking.
+Alive.
+She looked like someone I had seen on a screen and somehow dreamed into existence.
+We flirted without fear.
+Eyes meeting.
+Breath catching.
+Butterflies taking flight beneath the ribs.
+Then laughter again.
+Easy.
+Golden.
+
+I tripped.
+
+For a second, the ground was waiting.
+But before I reached it, her arms were around my waist.
+I didn't fall.
+I was held.
+Suspended between the ground and her arms,
+I felt something I had almost forgotten.
+Safety.
+No eggshells.
+No walking carefully.
+No being called dramatic.
+No shrinking.
+Just being held.
+Cherished.
+Protected.
+
+Alive.
+
+I woke with a smile still resting on my face.
+Something light swelling inside my chest.
+And I understood.
+For two years,
+I had mistaken crumbs for a feast.
+I had starved so quietly that I began to believe the hunger was love.
+Maybe that was the piece of my soul the dream returned.
+
+Not a girl. Not a promise. Not even love.
+
+The knowledge that joy was still mine.
+That my heart had not closed.
+That somewhere inside me, the colourful procession was still moving.
+And perhaps, one day, someone will walk beside me through the sunlight.
+
+Perhaps she'll catch me when I fall.
+
+But even if she doesn't—
+
+I am still
+walking
+toward the light.
+`,
+        },
+        {
+          tag: 'shard n°17',
+          title: 'le soleil avant la tempête',
+          text: `Tu te souviens ?
+
+La première fois
+que nous nous sommes rencontrées.
+
+Toi, non.
+Parce que moi,
+je t'avais remarquée avant.
+
+Tu étais assise à ton bureau,
+chemise blanche,
+les yeux baissés sur tes feuilles,
+un peu stressée,
+un peu ailleurs,
+un petit soupir
+au bord des lèvres.
+
+Je t'ai vue.
+
+Et lorsque tu as relevé la tête,
+sans même savoir que j'existais,
+j'ai suivi ton regard—
+qui parcourait la pièce,
+s'attardant sur l'inconnu.
+
+Je continuais de te regarder.
+
+Si belle.
+Si délicate.
+Si parfaite.
+
+Tes yeux.
+Tes lèvres.
+Ton visage.
+
+Poupée de porcelaine.
+
+C'est ainsi
+que nos amies
+ont commencé à t'appeler
+dès qu'elles t'ont vue.
+
+Tu riais.
+Tu te tortillais légèrement,
+gênée.
+
+Innocente.
+Lumineuse.
+Belle.
+Intelligente aussi.
+
+Tu te souviens ?
+
+La première fois
+que je t'ai parlé.
+
+Je n'arrivais pas
+à regarder tes yeux.
+
+Alors je regardais ton visage
+autrement—
+tes lèvres,
+ton menton,
+chaque détail,
+comme une toile
+où tout était beau.
+
+Tu souriais.
+Tu riais.
+Tu regardais le sol
+en parlant.
+
+Encore plus parfaite.
+
+Ton visage—
+le soleil.
+
+Le soleil,
+aveuglant, froid,
+beaucoup trop éclatant,
+avant la tempête.
+
+Il y a longtemps.
+`,
+        },
+        {
+          tag: 'shard n°18',
+          title: 'again',
+          text: `Here I am, again.
+
+There she is—
+darkness,
+wearing a smirk
+on her ugly face.
+
+Again.
+
+That hollow
+inside my chest
+has a cruel way
+of opening
+when everything else
+is already falling apart.
+
+These tears
+have turned red,
+scratching
+the thin skin
+of my face.
+
+Every passerby
+has eyes. 
+
+So I want to go home.
+
+Just as I begin
+to smell the flowers,
+to feel the air
+loosen around my neck— 
+there she comes.
+
+A hand
+rests against
+the wound
+behind my back. 
+
+Fingers digging in.
+
+Claws.
+
+Again.
+
+She still owns me.
+`,
+        },
+        {
+          tag: 'shard n°19',
+          title: 'go back.',
+          text: `I want to go back.
+
+I want to go back.
+
+I want to go back.
+
+To the first kiss.
+
+I want to tell you—
+of the wars
+we would wage
+and mistake for love.
+
+Of the ways
+we would unmake each other.
+
+Of the cuts
+you would leave beneath my skin.
+
+Of the wound
+that would grow
+too vast
+to live inside.
+
+Of the knife
+you would bury
+between my shoulder blades
+and leave there,
+
+bleeding.
+
+But instead,
+I watch you kiss her.
+And I scream.
+I scream until
+the words tear
+out of me.
+
+STOP.
+
+Don't give her
+all of you.
+
+Don't disappear
+inside her.
+
+Don't—
+
+I am here.
+
+I am here.
+
+I AM HERE.`,
+        },
+        {
+          tag: 'shard n°20',
+          title: 'what if',
+          text: `What if, 
+          in another universe,
+you are the good one.
+
+What if, 
+in another universe,
+you’re me
+and I’m you.
+`,
+        },
+        {
+          tag: 'shard n°21',
+          title: 'the trade',
+          text: `# The Trade
+
+And when the time comes,
+
+we ask for a trade.
+
+More hours. Minutes. Seconds.
+
+It’s always the ones who love too much
+who are fierce enough to bargain with evil,
+willing to trade years of their lives
+for just one minute more.
+
+Maybe that’s how pacts with the devil began.
+Years ago.
+
+Four in the morning,
+on the kitchen floor,
+tears pooling on the tile,
+screams breaking into wails:
+
+*Please. Save my brother.*
+
+Three months ago.
+Begging for someone
+who didn’t want me back:
+
+*Please. Make her stay.*
+
+Today.
+
+At the airport terminal,
+I say goodbye to my mother,
+and finally understand what I was leaving behind.
+My past. My future.
+
+Everything—
+
+for someone who doesn’t even
+
+say hello anymore.
+`,
+        },
+      ];
+
+      const PROLOGUE_TEXT = `These here, are pieces of me, written during the worst period of my life.
+
+For some context, I have always been a depressed girl.
+
+The sad girl.
+
+The girl who cries when her favourite show ends, when a friend gives her her favourite Sharpie so she can finish her drawing, when something beautiful comes to an end and she wasn't ready for it to.
+
+Depression has met me several times throughout my life. And every time, She took something with her.
+Pieces of me that I never found again.
+But somehow, I always found other ways to live without them.
+
+This time, though, was different.
+
+This time, my whole soul was crushed. Disappeared even.
+
+You know that feeling when you break something you promised yourself you wouldn't break? That vase you've had for years, perhaps. The one you are so careful with because you tell yourself, I'm not stupid enough to break this.
+And then you do.
+And suddenly you're on the floor, desperately trying to save it. Picking up the pieces. Counting them. Trying to fit one against another. Maybe even finding some glue, because surely, surely, if you're careful enough, if you take your time, you can put it back together.
+And maybe you can.
+Mostly.
+But then you notice them.
+
+The microscopic shards.
+
+The pieces so small that you didn't even notice them breaking away.
+And no matter how good a bricoleur you are, there is no way to glue those back together.
+They're too small.
+Too light.
+And before you even have the chance to reach for them, the breeze coming through your window catches them and carries them away.
+Into the deepest corners of your furniture.
+Under your bed.
+Between the cracks in the floor.
+Places you'll probably never look.
+Places you will never know how to reach.
+
+See?
+
+This was like that.
+Little shards.
+Dust, even.
+
+Pieces of me falling away while I stood there and watched myself break apart.
+
+Watched myself become less and less.
+And I couldn't do anything about it.
+
+And this?
+
+Because of one person.
+One person out of eight billion.
+
+Her. 
+`;
+
+      const PROLOGUE_DATA = {
+        tag: 'PROLOGUE',
+        title: 'Dust',
+        text: PROLOGUE_TEXT,
+      };
+
+      const modal = document.getElementById('readerModal');
+      const modalTag = document.getElementById('modalTag');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalBody = document.getElementById('modalBody');
+
+      function openShard(index) {
+        const data = SHARDS_DATA[index];
+        modalTag.innerText = data.tag;
+        modalTitle.innerText = data.title;
+        modalBody.innerText = data.text;
+        modal.classList.add('open');
+        markShardRead(index);
+      }
+
+      document.getElementById('prologueBtn').addEventListener('click', () => {
+        modalTag.innerText = PROLOGUE_DATA.tag;
+        modalTitle.innerText = PROLOGUE_DATA.title;
+        modalBody.innerText = PROLOGUE_DATA.text;
+        modal.classList.add('open');
+        document.querySelector('.modal-card').scrollTop = 0;
+
+        const SHARDS_SECTION_TEXT = `therefore, i beg of you, humans,
+to understand what kind of power you hold over each other.
+i beg you to be compassionate enough with one another.
+to look at another human being and see another you.
+that there are tiny, microscopic pieces of them that you may never even know exist.
+and that sometimes,
+you can make one of those pieces fall.
+sometimes you won't even hear it.
+sometimes neither will they.
+until one day they look down
+and realise something is missing.
+so i beg you,
+be gentle with each other.
+just for a moment,
+try to imagine what your doings might leave behind.
+what they might take with them.
+what might never come back.
+
+i wish she had done that.
+i wish.
+but perhaps that is why i am begging you now,
+humans,
+because i am no longer one of you.
+i am only a little shard now.
+a little piece that fell somewhere between the cracks.
+and when the window opens,
+i become dust.`;
+
+        const SHARDS_SECTION_DATA = {
+          tag: 'SHARDS',
+          title: 'A Soul of Its Own',
+          text: SHARDS_SECTION_TEXT,
+        };
+
+        document
+          .getElementById('shardAvatarBtn')
+          .addEventListener('click', () => {
+            modalTag.innerText = SHARDS_SECTION_DATA.tag;
+            modalTitle.innerText = SHARDS_SECTION_DATA.title;
+            modalBody.innerText = SHARDS_SECTION_DATA.text;
+            modal.classList.add('open');
+            document.querySelector('.modal-card').scrollTop = 0;
+          });
+      });
+
+      function closeModal() {
+        modal.classList.remove('open');
+      }
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+
+      const canvas = document.getElementById('dust-canvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      class Particle {
+        constructor() {
+          this.reset();
+        }
+        reset() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.size = Math.random() * 1.5 + 0.4;
+          this.speedX = (Math.random() - 0.5) * 0.25;
+          this.speedY = (Math.random() - 0.5) * 0.25;
+          this.alpha = Math.random() * 0.6 + 0.1;
+        }
+        update() {
+          this.x += this.speedX;
+          this.y += this.speedY;
+          if (
+            this.x < 0 ||
+            this.x > canvas.width ||
+            this.y < 0 ||
+            this.y > canvas.height
+          ) {
+            this.reset();
+          }
+        }
+        draw() {
+          ctx.fillStyle = `rgba(245, 200, 100, ${this.alpha})`;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      for (let i = 0; i < 75; i++) {
+        particles.push(new Particle());
+      }
+
+      function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p) => {
+          p.update();
+          p.draw();
+        });
+        requestAnimationFrame(animateParticles);
+      }
+      animateParticles();
+
+      let audioCtx = null;
+      let isPlaying = false;
+
+      const soundToggle = document.getElementById('soundToggle');
+      const soundLabel = document.getElementById('soundLabel');
+
+      soundToggle.addEventListener('click', () => {
+        if (!isPlaying) {
+          startSoundscape();
+          soundToggle.classList.add('active');
+          soundLabel.innerText = 'Soundscape On';
+          isPlaying = true;
+        } else {
+          stopSoundscape();
+          soundToggle.classList.remove('active');
+          soundLabel.innerText = 'Soundscape Off';
+          isPlaying = false;
+        }
+      });
+
+      function startSoundscape() {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const bufferSize = audioCtx.sampleRate * 2;
+        const noiseBuffer = audioCtx.createBuffer(
+          1,
+          bufferSize,
+          audioCtx.sampleRate
+        );
+        const output = noiseBuffer.getChannelData(0);
+
+        let lastOut = 0.0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          output[i] = (lastOut + 0.02 * white) / 1.02;
+          lastOut = output[i];
+          output[i] *= 3.5;
+        }
+
+        const noiseNode = audioCtx.createBufferSource();
+        noiseNode.buffer = noiseBuffer;
+        noiseNode.loop = true;
+
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(170, audioCtx.currentTime);
+
+        const gainNode = audioCtx.createGain();
+        gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+
+        noiseNode.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        noiseNode.start();
+      }
+
+      function stopSoundscape() {
+        if (audioCtx) {
+          audioCtx.close();
+        }
+      }
+
+      // ================================
+      // REAL FRACTURE GEOMETRY
+      // Every polygon edge gets subdivided into a small jagged
+      // zigzag instead of one straight line — actual broken-glass
+      // geometry, not a filter faking it. Edges are shared between
+      // neighboring shards, so the jitter for a given edge is cached
+      // by its endpoint coordinates and reused identically by both
+      // polygons that border it — otherwise the two sides wouldn't
+      // line up and gaps would appear.
+      // ================================
+
+      function seededRandom(seedStr) {
+        let h = 0;
+        for (let i = 0; i < seedStr.length; i++) {
+          h = (h * 31 + seedStr.charCodeAt(i)) >>> 0;
+        }
+        return function () {
+          h = (h * 1664525 + 1013904223) >>> 0;
+          return h / 4294967296;
+        };
+      }
+
+      const edgeJitterCache = new Map();
+
+      function jitteredEdgePoints(x1, y1, x2, y2) {
+        const a = `${x1},${y1}`;
+        const b = `${x2},${y2}`;
+        const canonicalStart = a < b ? a : b;
+        const key = a < b ? `${a}|${b}` : `${b}|${a}`;
+
+        if (!edgeJitterCache.has(key)) {
+          const rand = seededRandom(key);
+          const segments = 4;
+          const dx = x2 - x1;
+          const dy = y2 - y1;
+          const dist = Math.hypot(dx, dy) || 1;
+          const nx = -dy / dist;
+          const ny = dx / dist;
+          const maxJitter = Math.min(11, dist * 0.07);
+
+          const pts = [];
+          for (let i = 0; i <= segments; i++) {
+            const t = i / segments;
+            let px = x1 + dx * t;
+            let py = y1 + dy * t;
+            if (i > 0 && i < segments) {
+              const taper = Math.sin(t * Math.PI);
+              const offset = (rand() - 0.5) * 2 * maxJitter * taper;
+              px += nx * offset;
+              py += ny * offset;
+            }
+            pts.push([px, py]);
+          }
+          // store in canonical (a-to-b) order regardless of which
+          // direction this particular call came from
+          edgeJitterCache.set(
+            key,
+            a === canonicalStart ? pts : pts.slice().reverse()
+          );
+        }
+
+        const cached = edgeJitterCache.get(key);
+        return a === canonicalStart ? cached : cached.slice().reverse();
+      }
+
+      function applyFractureJitter() {
+        document.querySelectorAll('.shard-polygon').forEach((poly) => {
+          const raw = poly
+            .getAttribute('points')
+            .trim()
+            .split(/\s+/)
+            .map((p) => p.split(',').map(Number));
+
+          const newPoints = [];
+          for (let i = 0; i < raw.length; i++) {
+            const [x1, y1] = raw[i];
+            const [x2, y2] = raw[(i + 1) % raw.length];
+            const seg = jitteredEdgePoints(x1, y1, x2, y2);
+            seg.forEach((p, idx) => {
+              if (idx === 0 && newPoints.length > 0) return; // skip duplicate shared vertex
+              newPoints.push(p);
+            });
+          }
+          newPoints.pop(); // polygon auto-closes; drop the duplicated closing point
+          poly.setAttribute(
+            'points',
+            newPoints.map((p) => p.join(',')).join(' ')
+          );
+        });
+      }
+
+      const shardCornerPoints = [];
+
+      function captureShardCorners() {
+        document.querySelectorAll('.shard-polygon').forEach((poly) => {
+          const raw = poly
+            .getAttribute('points')
+            .trim()
+            .split(/\s+/)
+            .map((p) => p.split(',').map(Number));
+          shardCornerPoints.push(raw);
+        });
+      }
+
+      captureShardCorners();
+      applyFractureJitter();
+
+      // ================================
+      // INTRO SEQUENCE
+      // SOUL -> Intro text -> Prologue text -> the actual shard
+      // mesh shatters into view (each polygon's outline draws
+      // itself in, scattered, like a screen breaking) — this IS
+      // the constellation, not a stand-in for it. Titles only
+      // ever appear on hover.
+      // ================================
+
+      const introOverlay = document.getElementById('introOverlay');
+
+      const stageSoul = document.getElementById('stageSoul');
+      const stageIntro = document.getElementById('stageIntro');
+      const introSoulBtn = document.getElementById('introSoulBtn');
+      const introEnterBtn = document.getElementById('introEnterBtn');
+      const introBodyText = document.getElementById('introBodyText');
+
+      const INTRO_TEXT = `Here I am.
+
+Archiving yet another part of my life that I cannot keep inside me anymore. It has taken up too much of me.
+
+I never thought I would be here, doing this with this version of myself.
+
+I have archived stories before. Other people's stories. Stories I have listened to, collected, gathered, and carried with me for a while. I have also collected stories of my past selves, fragments of people I used to be, traces I found again while standing in the present.
+
+I have worked with stories as an artist. As an archivartist. But I never thought I would collect stories of my future selves. And perhaps that is what feels so strange about this. This time, I am not standing outside the story, looking at it from a distance.
+
+I am inside it. I am the person living it now.
+
+And this time, I am not archiving in order to keep a story from going unheard, unnoticed, or forgotten. It is not disappearing. If anything, it has been too present. It has been inside me, taking up space, taking up breath, taking up pieces of my life that it has no right to take.
+
+I am not preserving it because I am afraid it will vanish, but because I need some distance from it. I need to be able to look at it without carrying it in my body. Not to make it sacred. Not to turn it into something beautiful. Just to put it somewhere else. So I decided to give it another body. A digital one.
+
+This is where this artwork began.
+
+I wanted to archive the part of my life when I did not want to live.
+
+The depression.
+
+The thoughts I could not say out loud. The days when simply carrying my own body from one moment to the next felt like making my way through the woods.
+
+I carried it anyway.
+
+One step.
+
+Then another.
+
+One morning.
+
+Then another.
+
+Years ago, in high school, I wrote "Per aspera ad astra" in the corner of my textbook. Through hardships to the stars. I didn't know then what my "aspera" would be. I think I know now. This was it. This was my "aspera".
+
+And somehow, I am still here.
+
+Not because the pain disappeared or because I conquered it. But because I kept carrying this body through it, until surviving slowly became something else. Until I began choosing to live. Maybe this archive is a testimony of that second life.
+
+A trace.
+
+Evidence of the days when I did not want to be here, and the fact that I am here anyway.
+
+And maybe, one day, another version of me will find it. A future self I haven't met yet. She might look at these fragments and remember this body, this life, this particular version of me. She might understand something I cannot understand yet. Or maybe she won't. Maybe she will simply see traces of someone she used to be.
+
+
+So,
+
+Hello.
+
+I'm Anna.
+
+Or at least, this is a part of me. A digital fragment.
+
+Perhaps, if you enter this space, you will recognize something there.
+
+A thought that was once yours.
+
+A piece you lost.
+
+A little shard you never noticed falling.
+
+Be gentle with it.
+
+It is still me.
+`;
+
+      introBodyText.textContent = INTRO_TEXT;
+
+      function switchStage(hideEl, showEl) {
+        hideEl.classList.add('reading-hidden');
+        setTimeout(() => {
+          showEl.classList.remove('reading-hidden');
+        }, 1600);
+      }
+
+      introSoulBtn.addEventListener('click', () =>
+        switchStage(stageSoul, stageIntro)
+      );
+      introEnterBtn.addEventListener('click', () => {
+        stageIntro.classList.add('reading-hidden');
+        setTimeout(shatterReveal, 1600);
+      });
+
+      // Draws every shard polygon's outline in, at scattered random
+      // delays — not radiating from a single point — so it reads as
+      // the whole screen breaking apart at once rather than one
+      // impact spreading outward.
+      function shatterReveal() {
+        const mirrorContainer = document.querySelector('.mirror-container');
+        const polygons = Array.from(
+          document.querySelectorAll('.shard-polygon')
+        );
+
+        // Step 1: hide every polygon's stroke instantly, with
+        // transitions explicitly OFF — otherwise the existing hover
+        // CSS rule ("transition: all 0.35s...") animates this setup
+        // step itself, corrupting the real draw animation that
+        // follows.
+        polygons.forEach((poly) => {
+          const length = poly.getTotalLength();
+          poly.style.transition = 'none';
+          poly.style.strokeDasharray = length;
+          poly.style.strokeDashoffset = length;
+        });
+
+        // Force the browser to actually commit that hidden state
+        // before anything else happens.
+        mirrorContainer.getBoundingClientRect();
+        mirrorContainer.classList.add('mesh-visible');
+
+        // Start the wobble settling down at the same time — the
+        // lines look genuinely jagged/unstable at first, and calm
+        // into clean constellation lines as they finish drawing.
+        const wobbleAnim = document.getElementById('crackWobbleAnim');
+        if (wobbleAnim && typeof wobbleAnim.beginElement === 'function') {
+          try {
+            wobbleAnim.beginElement();
+          } catch (e) {
+            /* SMIL not supported, filter just stays static */
+          }
+        }
+        // Step 2: now turn on the slow draw transition and, on the
+        // next frame, animate dashoffset down to 0 — this is the
+        // part that actually draws each polygon's outline in.
+        // Shuffled order + accumulating delay = a real, visible
+        // sweep across several seconds, not everything popping in
+        // near-simultaneously.
+        const shuffled = polygons
+          .map((poly) => ({ poly, sort: Math.random() }))
+          .sort((a, b) => a.sort - b.sort)
+          .map(({ poly }) => poly);
+
+        let maxFinish = 0;
+        let cumulativeDelay = 0.2;
+
+        shuffled.forEach((poly) => {
+          poly.getBoundingClientRect(); // lock in the hidden state per-element
+          const duration = 2.2 + Math.random() * 1.6; // slow — this is a line actually being traced
+          const delay = cumulativeDelay;
+          cumulativeDelay += 0.35 + Math.random() * 0.35; // next crack starts a bit after this one, not all at once
+
+          poly.style.transition = `stroke-dashoffset ${duration}s ease-in-out ${delay}s`;
+          requestAnimationFrame(() => {
+            poly.style.strokeDashoffset = '0';
+          });
+          maxFinish = Math.max(maxFinish, delay + duration);
+        });
+
+        setTimeout(finishIntro, maxFinish * 1000 + 800);
+      }
+
+      function finishIntro() {
+        // Clear the inline styles used only for the draw-in
+        // animation so the CSS hover transitions (fill, glow) take
+        // back over normally.
+        document.querySelectorAll('.shard-polygon').forEach((poly) => {
+          poly.style.transition = '';
+          poly.style.strokeDasharray = '';
+          poly.style.strokeDashoffset = '';
+        });
+
+        document.querySelector('header').classList.add('revealed');
+        document.getElementById('shardAvatarBtn').classList.add('revealed');
+
+        // The overlay stays in the DOM but stops intercepting clicks,
+        // so the now-shattered constellation becomes interactive.
+        introOverlay.classList.add('intro-faded');
+      }
+
+      // ================================
+      // READ / UNREAD NODE STATE
+      // Persists across a visit via localStorage. Once every
+      // shard has been read, the record is cleared — the next
+      // visit begins the same way this one did: unread, unstable,
+      // waiting to be found.
+      // ================================
+
+      const READ_STORAGE_KEY = 'shardsReadIndices';
+      const allShardGroups = Array.from(
+        document.querySelectorAll('.shard-group')
+      );
+      const totalReadableShards = allShardGroups.filter((g) =>
+        g.querySelector('.star-node')
+      ).length;
+
+      function getReadIndices() {
+        try {
+          return new Set(
+            JSON.parse(localStorage.getItem(READ_STORAGE_KEY) || '[]')
+          );
+        } catch (e) {
+          return new Set();
+        }
+      }
+
+      function saveReadIndices(set) {
+        localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(Array.from(set)));
+      }
+
+      const placedCornerStars = new Set();
+
+      // Called both to restore already-witnessed shards on load, and
+      // the moment a shard is newly read. The shard brightens
+      // slightly, and a small star fades in — and stays — at each of
+      // its true corners. Shared corners with a neighboring shard
+      // only ever get one star, however many of the shards touching
+      // that point end up witnessed.
+      function witnessShard(index) {
+        const group = allShardGroups[index];
+        if (!group) return;
+
+        const polygon = group.querySelector('.shard-polygon');
+        if (polygon) polygon.classList.add('witnessed');
+
+        const corners = shardCornerPoints[index] || [];
+        const svg = document.querySelector('.glass-svg');
+        const ns = 'http://www.w3.org/2000/svg';
+
+        corners.forEach(([x, y], i) => {
+          const key = `${Math.round(x)},${Math.round(y)}`;
+          if (placedCornerStars.has(key)) return;
+          placedCornerStars.add(key);
+
+          const star = document.createElementNS(ns, 'circle');
+          star.setAttribute('cx', x);
+          star.setAttribute('cy', y);
+          star.setAttribute('r', 2.2);
+          star.setAttribute('class', 'corner-star');
+          svg.appendChild(star);
+
+          setTimeout(() => {
+            star.style.opacity = '1';
+          }, 150 + i * 120 + Math.random() * 200);
+        });
+      }
+
+      function applyNodeStates() {
+        const readSet = getReadIndices();
+        allShardGroups.forEach((group, index) => {
+          const node = group.querySelector('.star-node');
+          if (node) node.classList.add(readSet.has(index) ? 'read' : 'unread');
+          if (readSet.has(index)) witnessShard(index);
+        });
+      }
+      applyNodeStates();
+
+      function markShardRead(index) {
+        const readSet = getReadIndices();
+        if (readSet.has(index)) return;
+        readSet.add(index);
+        saveReadIndices(readSet);
+
+        const group = allShardGroups[index];
+        const node = group && group.querySelector('.star-node');
+        if (node) {
+          node.classList.remove('unread');
+          node.classList.add('read');
+        }
+        witnessShard(index);
+
+        if (readSet.size >= totalReadableShards) {
+          // Every shard witnessed. No celebration — just stillness,
+          // then a small phrase, then it lets go.
+          const witnessMessage = document.getElementById('witnessMessage');
+          document
+            .getElementById('shardAvatarBtn')
+            .classList.add('all-witnessed');
+          setTimeout(() => {
+            witnessMessage.classList.add('visible');
+          }, 2500);
+          setTimeout(() => {
+            witnessMessage.classList.remove('visible');
+          }, 8500);
+          setTimeout(() => {
+            localStorage.removeItem(READ_STORAGE_KEY);
+          }, 12000);
+        }
+      }
+    </script>
+  </body>
+</html>
