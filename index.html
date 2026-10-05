@@ -721,6 +721,37 @@ body { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   clip-path: inset(-0.3em 0 -0.3em 0);
 }
 
+/* soft fade at the bottom while more of the poem is below */
+.modal-scroll.more-below {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 4rem), transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 4rem), transparent 100%);
+}
+
+/* a scrollbar that can actually be seen */
+.modal-scroll { scrollbar-color: rgba(255, 255, 255, 0.25) transparent; }
+.modal-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.25); }
+
+.intro-para { opacity: 1; transition: none; }
+.intro-para .w { opacity: 0; transition: opacity 0.9s ease; }
+.reading-body.written .intro-para .w { opacity: 1; }
+
+.shard-avatar { z-index: 45; pointer-events: auto; }
+.shard-avatar::after { inset: -28px; }
+
+.shard-avatar { display: none !important; }
+
+/* phones: the real screen height, shard labels off, smaller header */
+.mirror-container { height: 100dvh; }
+
+@media (orientation: portrait) {
+  .shard-label { display: none; }
+}
+
+@media (max-width: 768px) {
+  header { padding: 1.2rem 1.2rem; gap: 0.8rem; }
+  .shard-avatar { bottom: 1.6rem; left: 1.6rem; }
+}
+
     </style>
   </head>
   <body>
@@ -787,6 +818,7 @@ body { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
             </feDisplacementMap>
           </filter>
         </defs>
+        <g id="meshGroup">
 
         <!-- SHARD 1 (Top Left Edge) -->
         <g class="shard-group" onclick="openShard(0)">
@@ -974,6 +1006,7 @@ body { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
           <polygon class="shard-polygon" points="1370,720 1480,900 1120,900" />
           <text x="1320" y="840" class="shard-label">shard n°21</text>
         </g>
+      </g>
       </svg>
     </div>
 
@@ -1138,7 +1171,7 @@ Oh, you don't have to give me anything in return.
 
 I love you.
 
-So that's all I ask for.
+That's all I am for.
 
 `,
         },
@@ -1645,7 +1678,7 @@ Just a letter in the alphabet.
 
           I say,
 
-          Look, all this is for you,
+Look, all this is for you,
 All my body parts laying on the table of our living room.
 
 Look, all this is for you,
@@ -1960,7 +1993,7 @@ I AM HERE.`,
           tag: 'shard n°20',
           title: 'what if',
           text: `What if, 
-          in another universe,
+in another universe,
 you are the good one.
 
 What if, 
@@ -1972,7 +2005,7 @@ and I’m you.
         {
           tag: 'shard n°21',
           title: 'the trade',
-          text: `# The Trade
+          text: `The Trade
 
 And when the time comes,
 
@@ -2083,11 +2116,18 @@ Her.
       const modalTitle = document.getElementById('modalTitle');
       const modalBody = document.getElementById('modalBody');
 
-      function openShard(index) {
-  const data = SHARDS_DATA[index];
+      // Which poem sits in which shard. Position on the screen -> poem.
+// Position 1 is the first number. To move a poem, swap two numbers.
+// (poem numbers are the original shard numbers, 1 to 21)
+const POEM_AT = [6, 13, 14, 4, 5, 1, 7, 8, 10, 9, 11, 12, 2, 3, 15, 16, 17, 18, 19, 20, 21]
+  .map((n) => n - 1);
+      
+  function openShard(index) {
+  const data = SHARDS_DATA[POEM_AT[index]];
   crackSound(0.03);
   openReader({
     ...data,
+    tag: 'shard n°' + (index + 1),
     from: allShardGroups[index].querySelector('.shard-polygon'),
     seed: data.tag,
   });
@@ -2135,7 +2175,7 @@ document.getElementById('shardAvatarBtn').addEventListener('click', () => {
   openReader({ ...SHARDS_SECTION_DATA, from: document.getElementById('shardAvatarBtn'), seed: 'soul' });
 });
       // ===== Reading shard: unique shape, grows from where you tapped =====
-const REVEAL_LINES = true; // set to false for the poem to appear all at once
+      const REVEAL_LINES = false;
 const readerShape = document.getElementById('readerShape');
 const readerScroll = document.getElementById('readerScroll');
 
@@ -2181,6 +2221,51 @@ function shardShapePoints(seedStr) {
   return out.map((p) => p[0].toFixed(2) + ',' + p[1].toFixed(2)).join(' ');
 }
 
+let scrollAnim = null;
+let gliding = false;
+
+function glideTo(target, ms) {
+  cancelAnimationFrame(scrollAnim);
+  gliding = true;
+  const start = readerScroll.scrollTop;
+  const delta = target - start;
+  const t0 = performance.now();
+  const step = (now) => {
+    if (userScrolled) { gliding = false; return; }
+    const p = Math.min(1, (now - t0) / ms);
+    const e = p < 0.025 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2; // eases in and out
+    readerScroll.scrollTop = start + delta * e;
+    if (p < 1) scrollAnim = requestAnimationFrame(step);
+    else gliding = false;
+  };
+  scrollAnim = requestAnimationFrame(step);
+}
+
+let followTimers = [];
+let userScrolled = false;
+
+// if the visitor touches or scrolls the poem, it stops following the pen
+['wheel', 'touchstart', 'pointerdown'].forEach((ev) =>
+  readerScroll.addEventListener(
+    ev,
+    () => {
+      userScrolled = true; cancelAnimationFrame(scrollAnim);
+      followTimers.forEach(clearTimeout);
+    },
+    { passive: true }
+  )
+);
+
+function updateFade() {
+  const more =
+    readerScroll.scrollTop + readerScroll.clientHeight <
+    readerScroll.scrollHeight - 8;
+    setTimeout(updateFade, 200);
+  readerScroll.classList.toggle('more-below', more);
+}
+readerScroll.addEventListener('scroll', updateFade);
+window.addEventListener('resize', updateFade);
+
 function openReader({ tag, title, text, from, seed }) {
   modalTag.innerText = tag;
   modalTitle.innerText = title;
@@ -2196,6 +2281,11 @@ function openReader({ tag, title, text, from, seed }) {
   }
 
   // poem, one line at a time
+  followTimers.forEach(clearTimeout);
+followTimers = [];
+userScrolled = false;
+cancelAnimationFrame(scrollAnim);
+gliding = false;
   modalBody.classList.remove('lit');
   modalBody.innerHTML = '';
   const lines = text.replace(/\s+$/, '').split('\n');
@@ -2203,21 +2293,27 @@ function openReader({ tag, title, text, from, seed }) {
 const dur = lines.map((l) => Math.max(0.25, l.length * 0.045));
 const pause = 0.12;
 const total = dur.reduce((a, b) => a + b + pause, 0);
-const scale = Math.min(1, 16 / total); // long poems speed up: never more than ~16s
+const scale = Math.min(1, 60 / total); // long poems are slowed to ~28s at most
+const items = [];
 let t = 0.5;
+
 lines.forEach((line, i) => {
   const el = document.createElement('div');
   el.className = 'ln';
   el.textContent = line === '' ? '\u00a0' : line;
   if (REVEAL_LINES) {
+    const startAt = t;
     el.style.transitionDuration = dur[i] * scale + 's';
-    el.style.transitionDelay = t + 's';
+    el.style.transitionDelay = startAt + 's';
     t += (dur[i] + pause) * scale;
+    items.push({ el, start: startAt, dur: dur[i] * scale });
   } else {
     el.style.transition = 'none';
   }
   modalBody.appendChild(el);
 });
+
+if (REVEAL_LINES) followWriting(readerScroll, items);
 
 // tapping the poem shows everything at once
 modalBody.onclick = () =>
@@ -2226,13 +2322,13 @@ modalBody.onclick = () =>
     el.style.transitionDuration = '0.3s';
   });
 
-  readerScroll.scrollTop = 0;
-  modal.classList.add('open');
-  requestAnimationFrame(() =>
-    requestAnimationFrame(() => modalBody.classList.add('lit'))
-  );
+readerScroll.scrollTop = 0;
+setTimeout(updateFade, 200);
+modal.classList.add('open');
+requestAnimationFrame(() =>
+  requestAnimationFrame(() => modalBody.classList.add('lit'))
+);
 }
-
       modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
       });
@@ -2421,29 +2517,22 @@ modalBody.onclick = () =>
 
       const INTRO_TEXT = `Here I am.
 
-Archiving yet another part of my life that I cannot keep inside me anymore. It has taken up too much of me.
+Archiving yet another part of my life.
 
-I never thought I would be here, doing this with this version of myself.
+I have archived stories before. Other's stories. Stories I have listened to, collected, gathered, and carried with me for a while. I have also collected stories of my past selves, fragments of who I used to be, traces I found again while standing in the present.
 
-I have archived stories before. Other people's stories. Stories I have listened to, collected, gathered, and carried with me for a while. I have also collected stories of my past selves, fragments of people I used to be, traces I found again while standing in the present.
+Yet, I never thought I would collect stories of my future selves, and perhaps that is what feels so strange about this. This time, I am not standing outside the story, looking at it from a distance. I am inside it. I am the person living now.
 
-I have worked with stories as an artist. As an archivartist. But I never thought I would collect stories of my future selves. And perhaps that is what feels so strange about this. This time, I am not standing outside the story, looking at it from a distance.
+For the first time, I am not archiving in order to keep a story from going unheard, unnoticed, or forgotten. If anything, this one has been too present. It has been inside me, taking up space, taking up breath, taking up pieces of my life that it has no right to take.
+I need some distance from it.I need to be able to look at it without carrying it in my body. Not to make it sacred. Not to turn it into something beautiful. Just to put it somewhere else. So I decided to give it another body. A digital one.
 
-I am inside it. I am the person living it now.
-
-And this time, I am not archiving in order to keep a story from going unheard, unnoticed, or forgotten. It is not disappearing. If anything, it has been too present. It has been inside me, taking up space, taking up breath, taking up pieces of my life that it has no right to take.
-
-I am not preserving it because I am afraid it will vanish, but because I need some distance from it. I need to be able to look at it without carrying it in my body. Not to make it sacred. Not to turn it into something beautiful. Just to put it somewhere else. So I decided to give it another body. A digital one.
-
-This is where this artwork began.
+This is where this "artwork" began.
 
 I wanted to archive the part of my life when I did not want to live.
 
 The depression.
 
-The thoughts I could not say out loud. The days when simply carrying my own body from one moment to the next felt like making my way through the woods.
-
-I carried it anyway.
+The thoughts I could not say out loud. The days when simply carrying my own body from one moment to the next felt like making my way through the woods. I carried it anyway.
 
 One step.
 
@@ -2453,8 +2542,6 @@ One morning.
 
 Then another.
 
-Years ago, in high school, I wrote "Per aspera ad astra" in the corner of my textbook. Through hardships to the stars. I didn't know then what my "aspera" would be. I think I know now. This was it. This was my "aspera".
-
 And somehow, I am still here.
 
 Not because the pain disappeared or because I conquered it. But because I kept carrying this body through it, until surviving slowly became something else. Until I began choosing to live. Maybe this archive is a testimony of that second life.
@@ -2462,8 +2549,6 @@ Not because the pain disappeared or because I conquered it. But because I kept
 A trace.
 
 Evidence of the days when I did not want to be here, and the fact that I am here anyway.
-
-And maybe, one day, another version of me will find it. A future self I haven't met yet. She might look at these fragments and remember this body, this life, this particular version of me. She might understand something I cannot understand yet. Or maybe she won't. Maybe she will simply see traces of someone she used to be.
 
 
 So,
@@ -2487,37 +2572,62 @@ Be gentle with it.
 It is still me.
 `;
 
-INTRO_TEXT.trim().split(/\n\s*\n/).forEach((text) => {
+const introWords = [];
+INTRO_TEXT.trim().split(/\n\s*\n/).forEach((para) => {
   const p = document.createElement('p');
   p.className = 'intro-para';
-  p.textContent = text;
+  const sentences = para.match(/[^.!?]+[.!?]+["”']*|[^.!?]+$/g) || [para];
+  sentences.forEach((s, si) => {
+    const words = s.trim().split(/\s+/);
+    words.forEach((word, wi) => {
+      const w = document.createElement('span');
+      w.className = 'w';
+      w.textContent = word;
+      p.appendChild(w);
+      p.appendChild(document.createTextNode(' '));
+      introWords.push({
+        el: w,
+        sentenceEnd: wi === words.length - 1,
+        paraEnd: wi === words.length - 1 && si === sentences.length - 1,
+      });
+    });
+  });
   introBodyText.appendChild(p);
 });
 
 let introTimers = [];
 
 function revealIntro() {
-  let t = 0;
-  introBodyText.querySelectorAll('.intro-para').forEach((p) => {
-    introTimers.push(
-      setTimeout(() => {
-        p.classList.add('shown');
-        p.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }, t)
-    );
-    // pause = a base beat + time proportional to the paragraph's length
-    t += 1800 + p.textContent.split(/\s+/).length * 130;
+  const PER_WORD = 0.04;      // seconds of base time per word
+  const PER_LETTER = 0.02;    // extra seconds per letter
+  const SENTENCE_PAUSE = 0.5; // pause after each sentence
+  const PARA_PAUSE = 0.7;     // extra pause after each paragraph
+
+  let t = 0.3;
+  const items = [];
+  introWords.forEach((w) => {
+    const d = PER_WORD + w.el.textContent.length * PER_LETTER;
+    w.el.style.transitionDelay = t + 's';
+    items.push({ el: w.el, start: t, dur: d });
+    t += d;
+    if (w.sentenceEnd) t += SENTENCE_PAUSE;
+    if (w.paraEnd) t += PARA_PAUSE;
   });
+
+  introBodyText.classList.add('written');
   introTimers.push(
-    setTimeout(() => introEnterBtn.classList.add('show'), t + 800)
+    setTimeout(() => introEnterBtn.classList.add('show'), (t + 0.8) * 1000)
   );
+  followWriting(introBodyText, items);
 }
 
 function showAllIntro() {
+  stopFollow();
   introTimers.forEach(clearTimeout);
-  introBodyText
-    .querySelectorAll('.intro-para')
-    .forEach((p) => p.classList.add('shown'));
+  introWords.forEach((w) => {
+    w.el.style.transitionDelay = '0s';
+  });
+  introBodyText.classList.add('written');
   introEnterBtn.classList.add('show');
 }
 
@@ -2675,7 +2785,7 @@ introBodyText.addEventListener('click', showAllIntro);
         if (polygon) polygon.classList.add('witnessed');
 
         const corners = shardCornerPoints[index] || [];
-        const svg = document.querySelector('.glass-svg');
+        const svg = document.getElementById('meshGroup');
         const ns = 'http://www.w3.org/2000/svg';
 
         corners.forEach(([x, y], i) => {
@@ -3027,6 +3137,7 @@ scheduleAmbientCrack();
 
 function closeModal() {
   modal.classList.remove('open');
+  followTimers.forEach(clearTimeout);
 }
 
 modal.addEventListener('click', (e) => {
@@ -3034,6 +3145,100 @@ modal.addEventListener('click', (e) => {
 });
 
 document.querySelector('.modal-close').addEventListener('click', closeModal);
+
+// ===== smooth, continuous follow-the-pen scrolling =====
+let currentFollow = null;
+
+function stopFollow() {
+  if (currentFollow) {
+    currentFollow.stopped = true;
+    cancelAnimationFrame(currentFollow.raf);
+    currentFollow = null;
+  }
+}
+
+// items: [{ el, start, dur }] with times in seconds from now
+function followWriting(container, items) {
+  stopFollow();
+  const state = { stopped: false, raf: 0 };
+  currentFollow = state;
+
+  // position of an element inside the scrolling box.
+  // (offsetTop is not affected by the opening animation, so it stays accurate)
+  const yIn = (el) =>
+    el.offsetParent === container ? el.offsetTop : el.offsetTop - container.offsetTop;
+
+  const START_AT = 0.6; // scrolling begins once the text fills 60% of the view
+  const first = items.find(
+    (it) => yIn(it.el) + it.el.offsetHeight > container.clientHeight * START_AT
+  );
+  if (!first) return; // short poem: everything fits, nothing to scroll
+
+  const last = items[items.length - 1];
+  const tStart = first.start;
+  const tEnd = last.start + last.dur + 1;
+
+  const t0 = performance.now();
+  const tick = (now) => {
+    if (state.stopped) return;
+    const elapsed = (now - t0) / 1000;
+    const maxScroll = container.scrollHeight - container.clientHeight;
+    const p = Math.min(1, Math.max(0, (elapsed - tStart) / (tEnd - tStart)));
+    container.scrollTop = maxScroll * p; // constant speed, whatever the text is doing
+    if (p < 1) state.raf = requestAnimationFrame(tick);
+  };
+  state.raf = requestAnimationFrame(tick);
+}
+
+// if the visitor touches or scrolls, they take over
+[readerScroll, introBodyText].forEach((c) =>
+  ['wheel', 'touchstart', 'pointerdown'].forEach((ev) =>
+    c.addEventListener(ev, stopFollow, { passive: true })
+  )
+);
+
+// The dot opens "A Soul of Its Own" whenever a tap lands on or near it
+document.addEventListener(
+  'click',
+  (e) => {
+    const dot = document.getElementById('shardAvatarBtn');
+    if (!dot || !dot.classList.contains('revealed')) return;
+    const r = dot.getBoundingClientRect();
+    const pad = 30; // forgiving area around the dot
+    if (
+      e.clientX >= r.left - pad && e.clientX <= r.right + pad &&
+      e.clientY >= r.top - pad && e.clientY <= r.bottom + pad
+    ) {
+      e.stopPropagation(); // so the shard underneath doesn't open too
+      dot.classList.remove('calling', 'final-call');
+      dotOpened = true;
+      openReader({
+        ...SHARDS_SECTION_DATA,
+        from: dot,
+        seed: 'soul',
+      });
+    }
+  },
+  true
+);
+
+// On tall (portrait) screens, rotate the whole mesh 90° so it fills the phone
+function layoutMesh() {
+  const svg = document.querySelector('.glass-svg');
+  const g = document.getElementById('meshGroup');
+  const portrait = window.innerHeight > window.innerWidth;
+  if (portrait) {
+    svg.setAttribute('viewBox', '0 0 900 1600');
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    g.setAttribute('transform', 'translate(900,0) rotate(90)');
+  } else {
+    svg.setAttribute('viewBox', '0 0 1600 900');
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+    g.removeAttribute('transform');
+  }
+}
+layoutMesh();
+window.addEventListener('resize', layoutMesh);
 
     </script>
   </body>
