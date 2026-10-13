@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500&display=swap" rel="stylesheet" />
-
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&display=swap" rel="stylesheet" />
    <style>
 
 .shard-avatar.final-call {
@@ -752,6 +752,73 @@ body { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   .shard-avatar { bottom: 1.6rem; left: 1.6rem; }
 }
 
+/* SOUL as one unbroken shard */
+.soul-shard {
+  display: block;
+  width: min(78vw, 56vh);
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  outline: none;
+}
+.soul-shard svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  transition: transform 1.6s ease;
+}
+.soul-shard polygon {
+  fill: rgba(255, 255, 255, 0.02);
+  stroke: rgba(255, 255, 255, 0.72);
+  stroke-width: 1.2px;
+  vector-effect: non-scaling-stroke;
+  animation: soulWait 4.6s ease-in-out infinite;
+  transition: fill 0.4s ease;
+}
+.soul-shard:hover polygon { fill: rgba(255, 255, 255, 0.07); }
+.soul-shard text {
+  fill: rgba(241, 245, 249, 0.92);
+  font-family: Georgia, serif;
+  font-size: 34px;
+  letter-spacing: 0.4em;
+  text-anchor: middle;
+  pointer-events: none;
+}
+@keyframes soulWait {
+  0%, 100% { stroke-opacity: 0.55; filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.12)); }
+  50%      { stroke-opacity: 1;    filter: drop-shadow(0 0 20px rgba(245, 158, 11, 0.42)); }
+}
+
+/* on tap, the shard fades and grows very slightly */
+.reading-screen.reading-hidden .soul-shard svg { transform: scale(1.04); }
+
+/* intro: wider and tighter, so the short text fits without scrolling */
+.reading-screen { max-width: 760px; }
+.reading-body { position: relative; max-height: 76vh; line-height: 1.7; }
+.intro-para { margin-bottom: 0.9em; }
+
+.reading-body {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 500;
+  color: rgba(226, 232, 240, 0.94);
+  letter-spacing: 0.01em;
+}
+.soul-shard text {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 500;
+  font-size: 38px;
+}
+
+.reading-screen { max-width: 1000px; }
+
+.reading-body {
+  max-height: 82vh;
+  scrollbar-width: none;
+}
+.reading-body::-webkit-scrollbar { display: none; }
+
     </style>
   </head>
   <body>
@@ -760,7 +827,20 @@ body { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
        ================================ -->
     <div class="intro-overlay" id="introOverlay">
       <div class="reading-screen" id="stageSoul">
-        <button class="reading-title" id="introSoulBtn">SOUL</button>
+        <button class="soul-shard" id="introSoulBtn" aria-label="SOUL, tap to enter">
+          <svg viewBox="0 0 400 520" aria-hidden="true">
+            <defs>
+              <filter id="soulWob" x="-20%" y="-20%" width="140%" height="140%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.012 0.018" numOctaves="2" seed="7" result="n" />
+                <feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G" />
+              </filter>
+            </defs>
+            <g filter="url(#soulWob)">
+              <polygon points="70,60 190,6 255,48 352,38 392,190 336,300 372,420 250,512 168,452 88,486 14,330 46,214 0,130" />
+            </g>
+            <text x="206" y="272">SOUL</text>
+          </svg>
+        </button>
       </div>
 
       <div class="reading-screen reading-hidden" id="stageIntro">
@@ -2517,60 +2597,27 @@ requestAnimationFrame(() =>
 
       const INTRO_TEXT = `Here I am.
 
-Archiving yet another part of my life.
-
-I have archived stories before. Other's stories. Stories I have listened to, collected, gathered, and carried with me for a while. I have also collected stories of my past selves, fragments of who I used to be, traces I found again while standing in the present.
-
-Yet, I never thought I would collect stories of my future selves, and perhaps that is what feels so strange about this. This time, I am not standing outside the story, looking at it from a distance. I am inside it. I am the person living now.
-
-For the first time, I am not archiving in order to keep a story from going unheard, unnoticed, or forgotten. If anything, this one has been too present. It has been inside me, taking up space, taking up breath, taking up pieces of my life that it has no right to take.
-I need some distance from it.I need to be able to look at it without carrying it in my body. Not to make it sacred. Not to turn it into something beautiful. Just to put it somewhere else. So I decided to give it another body. A digital one.
-
-This is where this "artwork" began.
+Archiving yet another part of my life that I cannot keep inside me anymore. It has taken up too much of me.
 
 I wanted to archive the part of my life when I did not want to live.
 
 The depression.
 
-The thoughts I could not say out loud. The days when simply carrying my own body from one moment to the next felt like making my way through the woods. I carried it anyway.
+I carried it anyway.
 
-One step.
+One step. Then another.
 
-Then another.
-
-One morning.
-
-Then another.
+Years ago, in high school, I wrote "Per aspera ad astra" in the corner of my textbook. Through hardships to the stars. I didn't know then what my "aspera" would be. I think I know now. This was it.
 
 And somehow, I am still here.
 
-Not because the pain disappeared or because I conquered it. But because I kept carrying this body through it, until surviving slowly became something else. Until I began choosing to live. Maybe this archive is a testimony of that second life.
+A trace. Evidence of the days when I did not want to be here, and the fact that I am here anyway.
 
-A trace.
+So, Hello. I'm Anna. Or at least, this is a part of me. A digital fragment.
 
-Evidence of the days when I did not want to be here, and the fact that I am here anyway.
+Perhaps, if you enter this space, you will recognize something there. A little shard you never noticed falling.
 
-
-So,
-
-Hello.
-
-I'm Anna.
-
-Or at least, this is a part of me. A digital fragment.
-
-Perhaps, if you enter this space, you will recognize something there.
-
-A thought that was once yours.
-
-A piece you lost.
-
-A little shard you never noticed falling.
-
-Be gentle with it.
-
-It is still me.
-`;
+Be gentle with it. It is still me.`;
 
 const introWords = [];
 INTRO_TEXT.trim().split(/\n\s*\n/).forEach((para) => {
@@ -2597,7 +2644,18 @@ INTRO_TEXT.trim().split(/\n\s*\n/).forEach((para) => {
 
 let introTimers = [];
 
+// shrinks the text just enough that all of it fits in the box, with no scrolling
+function fitIntro() {
+  let size = Math.min(25, Math.max(27, window.innerHeight * 0.035));
+  introBodyText.style.fontSize = size + 'px';
+  while (introBodyText.scrollHeight > introBodyText.clientHeight + 1 && size > 20) {
+    size -= 0.5;
+    introBodyText.style.fontSize = size + 'px';
+  }
+}
+
 function revealIntro() {
+  fitIntro();
   const PER_WORD = 0.04;      // seconds of base time per word
   const PER_LETTER = 0.02;    // extra seconds per letter
   const SENTENCE_PAUSE = 0.5; // pause after each sentence
