@@ -819,6 +819,9 @@ body { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 }
 .reading-body::-webkit-scrollbar { display: none; }
 
+.modal-tag:empty { display: none; }
+.shard-label { display: none; }
+
     </style>
   </head>
   <body>
@@ -2202,14 +2205,160 @@ Her.
 const POEM_AT = [6, 13, 14, 4, 5, 1, 7, 8, 10, 9, 11, 12, 2, 3, 15, 16, 17, 18, 19, 20, 21]
   .map((n) => n - 1);
       
-  function openShard(index) {
-  const data = SHARDS_DATA[POEM_AT[index]];
+  const PARTS = {
+  'waiting': [
+`10 AM
+
+You must still be getting ready.
+You stayed up too late.`,
+`2 PM
+
+You said we'd meet here.
+Beside the dark-blue river.
+Where the swans dance.
+Under the bridge.
+
+You're not here.`,
+`6 PM
+
+You must've tried to call.
+Phone died.`,
+`7 PM
+
+You must be worried about me.
+Sure I'm still here.
+
+You're right.`,
+`8 PM
+
+Waiting.`,
+`12 AM
+
+You must've fallen asleep
+on the way.
+
+Dreaming of the river.
+
+Dreaming of the swans.
+
+Dreaming of me.`,
+  ],
+  'the 2-processions': [
+`Last night,
+
+my subconscious gave back a piece of my soul I thought I'd lost forever.`,
+`Black suits.
+Slow footsteps.
+Straight backs.
+Faces drained of colour.
+A solemn parade of people who had forgotten how to laugh.`,
+`Only pity.
+A quiet kind.
+You were trapped in a world that refused to let the light in.`,
+`Colour.
+Sunlight.
+Laughter.
+Running.
+Playing.
+People with their arms thrown carelessly around each other.
+People alive.`,
+`I tripped.
+
+For a second, the ground was waiting.
+But before I reached it, her arms were around my waist.
+I didn't fall.
+I was held.`,
+`For two years,
+I had mistaken crumbs for a feast.
+I had starved so quietly that I began to believe the hunger was love.`,
+`I am still
+walking
+toward the light.`,
+  ],
+  'gate 6': [
+`Look at me, Mom.
+Am I a fool?
+Or am I brave?`,
+`Jumping off a cliff without knowing if there's a bottom.
+Hanging my whole weight from a thread already beginning to fray.
+Throwing my heart into the recycling bin, hoping it comes back less broken.
+Diving headfirst into the cold water of maybe.`,
+`Waiting for a hug I wish was more.
+Waiting for my dreams outside the door of a shop that's already closed.`,
+`Legs shaking.
+Heart on sleeve.
+Chest collapsing.
+Teeth grinding, trying to keep these traitorous tears in.`,
+`The one who thrives when she's in love, but survives when she's not.`,
+`Heels over head.
+Right onto the concrete.`,
+  ],
+  'outside': [
+`I grab my keys in my hand.
+The sharp edge of the big key scratches my palm. Blood appears. I rub it onto my jeans and hurry to put on my shoes.`,
+`I want to leave.
+I want to escape before the voice inside my head forces me back to bed.
+Again.`,
+`Why are there so many doors in this building?`,
+`I wonder if they notice my big red eyes.
+If they can see that my heart is bleeding.`,
+`In my mind, I am crumbling onto the floor.
+I am curled up in a foetal position, crying my eyes out, screaming my heart out.
+Outside, I smile at the old lady.
+“Have a nice day.”`,
+`Suddenly, a little girl with big green eyes points at the blood on my jeans.
+“You hurt.”`,
+  ],
+  'How-To: Stay Alive': [
+`Standing on the porch first thing in the morning.
+Looking at the green beyond the porch.
+My feet feeling the cold concrete.`,
+`The colours of the sky
+reflected in my irises.
+The sound of crickets
+whispering secrets.`,
+`The bike
+waiting for me
+to go out for a ride.
+The notebook
+waiting for my handwriting.`,
+`Painting with bare hands.
+Loving completely
+and wholeheartedly.`,
+`Picking flowers from the grass
+and feeling bad about it.
+Crying at the saddest movie
+and still wanting to watch it again,
+no matter how much
+it breaks my heart.`,
+`New people to meet.
+New stories to learn.
+New places and humans
+to put all this love into.`,
+  ],
+};
+
+// each tap on a shard shows the next fragment of its poem, in order
+const partCount = {};
+function nextPart(poemIndex, data) {
+  const list = PARTS[data.title];
+  if (!list || !list.length) return { text: data.text, n: 0 };
+  const n = partCount[poemIndex] || 0;
+  partCount[poemIndex] = n + 1;
+  return { text: list[n % list.length], n };
+}
+
+function openShard(index) {
+  const poemIndex = POEM_AT[index];
+  const data = SHARDS_DATA[poemIndex];
+  const part = nextPart(poemIndex, data);
   crackSound(0.03);
   openReader({
     ...data,
-    tag: 'shard n°' + (index + 1),
+    text: part.text,
+    tag: '',
     from: allShardGroups[index].querySelector('.shard-polygon'),
-    seed: data.tag,
+    seed: data.tag + '_' + part.n,
   });
   markShardRead(index);
 }
