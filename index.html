@@ -1,127 +1,245 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Shattered, all poems</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500&display=swap" rel="stylesheet" />
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/><title>SHARDS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500&family=Cormorant+Garamond:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
-  :root { --bg:#050508; --gold:#f59e0b; color-scheme: dark; }
-  html, body { height:100%; margin:0; }
-  body { background:var(--bg); overflow:hidden; user-select:none; font-family:Georgia, serif; }
-  #mesh { position:fixed; inset:0; width:100%; height:100%; }
-  .sh polygon { fill:rgba(255,255,255,.012); stroke:rgba(255,255,255,.42); stroke-width:1px; vector-effect:non-scaling-stroke; cursor:pointer; transition:fill .35s ease, stroke .35s ease; }
-  .sh:hover polygon { fill:rgba(255,255,255,.1); stroke:rgba(255,255,255,.95); }
-  .sh.seen polygon { fill:rgba(255,255,255,.055); stroke:rgba(255,255,255,.6); }
-  .star { fill:#f8fafc; opacity:0; transition:opacity 1.6s ease; pointer-events:none; }
-  #ov { position:fixed; inset:0; background:rgba(4,4,7,.74); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .7s ease; }
-  #ov.open { opacity:1; pointer-events:auto; }
-  #card { position:relative; width:min(640px, 88vw); display:flex; align-items:center; pointer-events:none; opacity:0;
-          transform:translate(var(--fx,0px),var(--fy,0px)) scale(.1); transition:transform .9s cubic-bezier(.16,1,.3,1), opacity .6s ease; }
-  #ov.open #card { opacity:1; transform:none; }
-  #shape { position:absolute; inset:0; width:100%; height:100%; overflow:visible; filter:drop-shadow(0 0 14px rgba(245,158,11,.18)); }
-  #shape polygon { fill:rgba(12,12,20,.8); stroke:rgba(255,255,255,.7); stroke-width:1.2px; vector-effect:non-scaling-stroke; }
-  #frag { position:relative; width:100%; box-sizing:border-box; padding:3.2rem 3.6rem; pointer-events:auto; max-height:78vh; overflow-y:auto; scrollbar-width:none;
-          font-family:'Caveat','Bradley Hand',cursive; line-height:1.4; color:rgba(226,232,240,.93); }
-  #frag .ln { display:block; min-height:1.4em; opacity:0; transition:opacity 1.2s ease; }
-  #frag.lit .ln { opacity:1; }
-  #x { position:absolute; top:1.5rem; right:2.3rem; background:transparent; border:0; color:var(--gold); font-size:1.4rem; cursor:pointer; pointer-events:auto; filter:drop-shadow(0 0 6px rgba(245,158,11,.8)); }
-  #x:hover { color:#fff; }
-  #saw { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; font-size:clamp(1.2rem,3vw,1.8rem); letter-spacing:.15em; color:rgba(241,245,249,.75); opacity:0; pointer-events:none; transition:opacity 3s ease; }
-  #saw.on { opacity:1; }
-  #note { position:fixed; left:0; right:0; bottom:calc(.8rem + env(safe-area-inset-bottom,0px)); text-align:center; color:#64748b; font-size:.75rem; letter-spacing:.08em; pointer-events:none; }
-</style>
-</head>
-<body>
-<svg id="mesh" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-label="Broken screen. Each shard holds a fragment."></svg>
+:root{--gold:#f59e0b;--dim:#94a3b8}
+*{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:#050508;color:#f1f5f9;font-family:Georgia,serif;overflow:hidden;touch-action:manipulation}
+#dust{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+#mesh{position:fixed;inset:0;width:100%;height:100%;z-index:3;opacity:0;transition:opacity .5s}
+#mesh.on{opacity:1}
+.sh polygon{fill:rgba(255,255,255,.012);stroke:rgba(255,255,255,.42);stroke-width:1px;vector-effect:non-scaling-stroke;cursor:pointer;transition:fill .35s,stroke .35s}
+.sh:hover polygon{fill:rgba(255,255,255,.1);stroke:rgba(255,255,255,.95)}
+.sh.seen polygon{fill:rgba(255,255,255,.045);stroke:rgba(255,255,255,.55)}
+#mesh.reveal .sh polygon{transition:fill 3.5s ease,stroke 3.5s ease}
+.star{fill:#f8fafc;opacity:0;transition:opacity 1.6s;pointer-events:none}
+#hd{position:fixed;top:0;right:0;z-index:10;display:flex;gap:1.2rem;align-items:center;padding:calc(1.4rem + env(safe-area-inset-top,0px)) 1.6rem 0;opacity:0;transition:opacity 2s}
+#hd.on{opacity:1}
+#hd button{font:inherit;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.18);border-radius:9999px;padding:.5rem 1.1rem;cursor:pointer;backdrop-filter:blur(8px);transition:all .3s}
+#hd button:hover{color:#fff;border-color:rgba(255,255,255,.5)}
+#sd{display:inline-block;width:6px;height:6px;border-radius:50%;background:#64748b;margin-right:.6rem}
+#snd.act #sd{background:var(--gold);box-shadow:0 0 8px rgba(245,158,11,.85)}
+#intro{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center}
+#intro.done{pointer-events:none}
+.stage{position:relative;width:min(1000px,94vw);padding:1.5rem;text-align:center;transition:opacity 1.6s}
+.stage.hide{opacity:0;pointer-events:none;position:absolute}
+.soul{display:block;margin:0 auto;width:min(78vw,56vh);background:none;border:0;cursor:pointer;outline:none}
+.soul svg{display:block;width:100%;height:auto;overflow:visible}
+.soul polygon{fill:rgba(255,255,255,.02);stroke:rgba(255,255,255,.72);stroke-width:1.2px;vector-effect:non-scaling-stroke;animation:wait 4.6s ease-in-out infinite;transition:fill .4s}
+.soul:hover polygon{fill:rgba(255,255,255,.07)}
+.soul text{fill:rgba(241,245,249,.92);font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:38px;letter-spacing:.4em;text-anchor:middle;pointer-events:none}
+@keyframes wait{0%,100%{stroke-opacity:.55;filter:drop-shadow(0 0 4px rgba(245,158,11,.12))}50%{stroke-opacity:1;filter:drop-shadow(0 0 20px rgba(245,158,11,.42))}}
+#ib{max-height:76vh;overflow-y:auto;scrollbar-width:none;font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.7;color:rgba(226,232,240,.94);margin-bottom:1.6rem}
+#ib::-webkit-scrollbar{display:none}
+#ib p{margin-bottom:.9em}
+#ib .w{opacity:0;transition:opacity .9s}
+#ib.written .w{opacity:1}
+#ib.all .w{opacity:1;transition:none}
+#enter{font:inherit;font-size:.75rem;letter-spacing:.3em;text-transform:uppercase;color:var(--dim);background:transparent;border:1px solid rgba(255,255,255,.28);border-radius:9999px;padding:.6rem 1.6rem;cursor:pointer;opacity:0;transition:opacity 1.5s,color .3s,border-color .3s}
+#enter.show{opacity:1}#enter:hover{color:#fff;border-color:rgba(255,255,255,.6)}
+#mesh.cracking .sh polygon{stroke:transparent}
+.cr{fill:none;stroke:rgba(255,255,255,.42)}
+#ov{position:fixed;inset:0;z-index:60;background:rgba(4,4,7,.74);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .7s}
+#ov.open{opacity:1;pointer-events:auto}
+#card{position:relative;width:min(640px,88vw);display:flex;align-items:center;pointer-events:none;opacity:0;transform:translate(var(--fx,0px),var(--fy,0px)) scale(.1);transition:transform .9s cubic-bezier(.16,1,.3,1),opacity .6s}
+#ov.open #card{opacity:1;transform:none}
+#ov:not(.open) #frag,#ov:not(.open) #x{pointer-events:none}
+#shape{position:absolute;inset:0;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 14px rgba(245,158,11,.18))}
+#shape polygon{fill:rgba(12,12,20,.8);stroke:rgba(255,255,255,.7);stroke-width:1.2px;vector-effect:non-scaling-stroke}
+#frag{position:relative;width:100%;padding:3.2rem 3.6rem;pointer-events:auto;max-height:78vh;overflow-y:auto;scrollbar-width:none;font-family:'Caveat','Bradley Hand',cursive;line-height:1.4;color:rgba(226,232,240,.93)}
+#frag::-webkit-scrollbar{display:none}
+#frag .ln{display:block;min-height:1.4em;opacity:0;transition:opacity 1.2s}
+#frag.lit .ln{opacity:1}
+#x{position:absolute;top:1.5rem;right:2.3rem;background:transparent;border:0;color:var(--gold);font-size:1.4rem;cursor:pointer;pointer-events:auto;filter:drop-shadow(0 0 6px rgba(245,158,11,.8))}
+#x:hover{color:#fff}
+#saw{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;font-size:clamp(1.2rem,3vw,1.8rem);letter-spacing:.15em;color:rgba(241,245,249,.75);opacity:0;pointer-events:none;transition:opacity 3s}
+#saw.on{opacity:1}
+@media(max-width:768px){#frag{padding:2.6rem 2.2rem}}
+</style></head><body>
+<canvas id="dust"></canvas>
+<svg id="mesh" class="cracking" preserveAspectRatio="xMidYMid slice" aria-label="A broken screen. Each shard holds a fragment."><defs><filter id="wob" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.012 0.018" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="10" xChannelSelector="R" yChannelSelector="G"><animate id="wobA" attributeName="scale" from="10" to="0" dur="12s" begin="indefinite" fill="freeze"/></feDisplacementMap></filter></defs><g id="mg" filter="url(#wob)"></g></svg>
+<div id="hd"><button id="pro">Prologue</button><button id="snd"><span id="sd"></span><span id="sl">Sound off</span></button></div>
+<div id="intro">
+ <div class="stage" id="s1"><button class="soul" id="soulBtn" aria-label="SOUL, tap to enter"><svg viewBox="0 0 400 520" aria-hidden="true"><defs><filter id="sw" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.012 0.018" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G"/></filter></defs><g filter="url(#sw)"><polygon points="70,60 190,6 255,48 352,38 392,190 336,300 372,420 250,512 168,452 88,486 14,330 46,214 0,130"/></g><text x="206" y="272">SOUL</text></svg></button></div>
+ 
+</div>
 <div id="saw">you saw me.</div>
-<div id="ov"><div id="card">
-  <svg id="shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polygon id="sp" points="0,0 100,0 100,100 0,100"/></svg>
-  <button id="x" aria-label="Close">✦</button>
-  <div id="frag"></div>
-</div></div>
-<div id="note">preview: tap any shard. every word, sentence or paragraph has its own shard.</div>
-
+<div id="ov"><div id="card"><svg id="shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polygon id="sp" points="0,0 100,0 100,100 0,100"/></svg><button id="x" aria-label="Close">✦</button><div id="frag"></div></div></div>
 <script>
 const FR=["I put on a t-shirt I find lying around, some shorts, and run towards the door. I open it wide and run into the world of nature and beautiful chaos.", "Blink.", "I barely open my eyes before a sigh escapes my mouth. I put on a shirt I folded in my dresser. I find the jeans I planned to wear last night. I slip into some shoes that make me look pretty.", "I stand in front of the door.\nI hesitate.\nThe world seems too boring, too fast, too shallow, too messy.", "Suffocating chaos.", "I go back to bed.", "Again.", "***", "I grab my keys in my hand\nThe sharp edge of the big key scratches my palm. Blood appears. I rub it onto my jeans and hurry to put on my shoes I want to leave I want to escape before the voice inside my head forces me back to bed Again I run down the stairs My steps become heavier The bitterness reaches my throat It makes my face blue I rush to open the main door Then another Why are there so many doors in this building?", "Finally, I come face to face with the world\nA person walking their dog\nAn old lady crossing the street\nA person in one car yelling at the person in another for driving too slowly I walk I wonder if they notice my big red eyes If they can see that my heart is bleeding I bet they think I smoked weed That’s what they usually think when they see young people with red eyes and tears in public Then I wonder about them What is the story of these people?", "Have they gone through what I’m going through?", "Will they?", "Have they ever experienced a love that broke them?", "In my mind, I am crumbling onto the floor\nI am curled up in a fetal position, crying my eyes out, screaming my heart out Outside, I smile at the old lady “Have a nice day.”", "Suddenly, a little girl with big green eyes points at the blood on my jeans “You hurt.”", "***", "One.", "Two.", "Three.", "One breath.", "Two breaths.", "Three.", "Tears.", "How many buckets full of tears are enough for you to see my love?", "You grab the sharpest fa zan, digging holes in every single one.", "I stare at Grandma’s picture on the wall.\nI reach for it from the puddle of this salted human water on the floor.", "Can she see me?", "Is she hurting, looking at me from above?\nOr is she screaming at me? At the shell of a person I’ve become?", "I am shameless.", "I touch her face through the cold glass and beg her to ask for help for me, wherever she is now, up above.", "I am gutless.", "I whisper, please.", "I tell her to make it stop.\nI ask a dead person to save me.", "One breath.", "Two breaths.", "Three.", "Grandma, can you please see me?", "Here.", "My heart.", "My eyes.", "My arms.", "My lungs.", "My intestines.", "My ears.", "My throat.", "Do you want something more?\nWait.\nHere, my soul.", "What? Why are you going?\nLook, it’s all for you.", "And more.", "You want my brains?\nSure.\nOh, you don’t have to give me anything in return.", "I love you.", "So that’s all I am for.", "Cut.", "Cut.", "Cut.", "Big chunks of hair\nfall and cover my bony toes.", "Cut.", "Cut.", "Cut.", "You said\nyou liked my hair long.\nCut.", "Cut.", "Cut.", "Ouch.", "I suck the blood\nfrom my pinky-promise finger.", "Cut.", "Cut.", "Cut.", "Until the scissors\nwon’t work anymore.", "The cup overflows.", "The sink chokes.", "The string strains.\nThe nails bleed.\nThe hair tangles.", "The teeth grind.", "The jaw locks.", "The tears burn.", "The mind goes static.\nThe feet stumble.\nThe hand trembles.", "The puzzle slips.", "The last piece falls.\nThe last strand of hope snaps.", "Never.", "10 AM\nYou must still be getting ready.\nYou stayed up too late.", "11 AM\nYou must’ve just woken up.\nRushing around your room,\nlooking for that shirt.", "12 PM\nYou must’ve stopped for coffee.\nYou never leave without coffee.", "1 PM\nYou must be getting ready to leave.\nAlways too long choosing what to wear.", "2 PM\nYou said we’d meet here.\nBeside the dark-blue river.", "Where the swans dance.\nUnder the bridge.\nYou’re not here.", "3 PM\nYou must’ve slept too late.\nRushing since morning.", "Coffee.", "Buttons.", "4 PM\nYou must’ve missed the bus.\nWaiting for the next one.", "5 PM\nYou must’ve forgotten your wallet.\nThrown off.", "Waiting again.", "6 PM\nYou must’ve tried to call.\nPhone died.", "7 PM\nYou must be worried about me.\nSure I’m still here.", "You’re right.", "8 PM\nWaiting.\n9 PM\nYou must’ve gotten hungry.", "Street food.", "Anything to reach me.\n10 PM\nYou must’ve found another way.", "Someone offered you a ride.\n11 PM\nYou must be almost here.", "Traffic.", "Wrong road.", "12 AM\nYou must’ve fallen asleep\non the way.", "Dreaming of the river.\nDreaming of the swans.", "Dreaming of me.", "Here I am, today.", "Standing in front of the giant departures board, the one that makes your neck pinch while you search for your destination.", "At least that’s one certainty.\nLook at me, Mom.", "Am I a fool?", "Or am I brave?", "Which one fits me better than these uncomfortable shoes that chafe my feet?", "Look at me.", "Heading straight into the unknown.\nJumping off a cliff without knowing if there’s a bottom.", "Hanging my whole weight from a thread already beginning to fray.", "Throwing my heart into the recycling bin, hoping it comes back less broken.", "Diving headfirst into the cold water of maybe.", "Waiting for a hug I wish was more.\nWaiting for my dreams outside the door of a shop that’s already closed.", "Look at me.", "Pretending I’ve got my life under control.", "Legs shaking.", "Heart on sleeve.", "Chest collapsing.", "Teeth grinding, trying to keep these traitorous tears in.", "Look at me.", "The fool who would do anything for love.\nLook at me.", "The one who thrives when she’s in love, but survives when she’s not.", "Look at me, grandma.\nHeels over head.\nRight onto the concrete.", "I look at the sky.", "Nothing’s there.", "I was never the person to pray.\nBut here I am—", "down on my knees.", "Praying.", "Can anyone hear me?\nI look at myself in the mirror.", "Hollow.", "Abyss.", "Green.", "Scarlet.", "Blue.", "A face\ncarved by sleepless nights.\nSkin\nstretched thin\nover bones", "I don’t remember meeting.\nI look at the sky.", "Again.", "I pray for something.\nAnything.\nGrandma,\nif you were here,\nI’d tuck my bony self", "into your arms,\nthe skin of my face\ncaressed by the cashmere\nof your shirt.", "Grandma,\ncan I come?", "Standing on the porch first thing in the morning.", "Looking at the green beyond the porch.\nMy feet feeling the cold concrete.", "A fresh breeze caressing my neck.\nThe smell of fresh grass in the morning.", "The sun rising before my eyes have barely opened.", "The colours of the sky reflected in my irises.", "The sound of crickets whispering secrets.\nPollen floating through the air.", "The sound of my favourite childhood show coming from the living room.", "The bike waiting for me to go out for a ride.", "The notebook waiting for my handwriting.\nThat friend waiting for my knock on their window to go out.", "The smell of food on the kitchen table that Mom made for me.", "Painting with bare hands.\nLoving completely and wholeheartedly.", "Picking flowers from the grass and feeling bad about it.", "Crying at the saddest movie and still wanting to watch it again, no matter how much it breaks my heart.", "Getting a letter from an old friend.\nNew people to meet.", "New stories to learn.\nNew places and humans to put all this love into.", "And suddenly, I was there.\nIn front of you.", "And the pain was smaller\nthan it had been the day before.", "The glasses had just dropped.\nThe colours were changing.", "Becoming what they really were.\nLess vibrant\nthan I’d seen them the day before.", "You told me nobody was going to love me.\nI looked you dead in the eyes.", "I thought it would hurt so badly.\nI thought I’d fall to my knees again,\nbegging you to tell me you did.", "But I didn’t.", "Something inside me\nfelt like mine again.\nI started noticing your flaws.", "That porcelain skin of yours\nhad microscopic cracks\nI’d somehow missed.", "And then I understood.\nI’d been painting over your cracks all along.", "We walk down the stairs.\nOur puffy jackets\nrub against each other,\na thin barrier\nagainst the electricity", "between our bodies.\nUnder the bridge,\ngreen moss claims\nthe cold stones\nas its kingdom.", "Swans dance\nunder the moonlit sky.\nStars waltz on the Moselle\nas if a ball were taking place.", "Maybe it was.", "Music from the cafés\nopen late for students\nechoes in our ears.", "We stop.", "Our eyes lock.", "You whisper,\n“Show me.”\nYou close your eyes.", "And there it is.", "Our first second kiss.\nYou look up at the sky\nand shout,\n“I am alive!”", "Blink.", "I walk down the stairs.\nMusic in my ears.\nOld ladies pass by,\nshaking their heads\nat the noise.", "I stop.", "The ball.", "The kiss.", "Five hundred metres away.\nI feel remorse.\nI forgot?", "I forgot.", "I spread my arms.", "My shadow grows wings.\nI look up at the sky.", "I shout,\n“I am free.”\nI look at the swans.", "Those beautiful,\ndevious creatures.\nI whisper,\n“Not this time.”", "What is this?", "This thing where one day\nI could touch the sky,\nand the next,\nthe cold concrete\nbeside the bed", "feels terrifying.", "This thing\nwhere I want to let you go,\nand then\nI fall to my knees,\nbegging", "for one more day.", "This thing\nwhere I see\nthe poison\nin my morning coffee,\nand still", "I drink it.", "This thing\nwhere I’ve found\nevery reason\nto leave,\nand still", "I close the book,\nand walk\nthe same road\nI’ve walked\na hundred times.", "Maybe I could live on my own.\nInside my own little cocoon.", "Maybe I could do the things\nI want to do\nwithout waiting for anyone.", "For u.", "Maybe I could be excited\nabout my own life.", "I could walk away\nwithout fear.\nWithout regret.", "I gave everything for u.\nMy sleep.\nMy hunger.", "My time.", "My tears.", "My sanity.", "Almost gave up my life for u.\nJust a letter in the alphabet.", "The u\nwho didn’t shed a tear.", "I look up at the sky.\nI see everything.\nFear.", "Grief.", "Love.", "Excitement.", "Passion.", "Pain.", "Longing.", "Desire.", "Anger.", "Tenderness.", "Joy.", "Loss.", "Nostalgia.", "Fear again.", "Love.", "A whole spectrum\nbursting above me.\nAnd somewhere\nbetween the light\nand the darkness,", "I find the thing\nlost in the cracks.\nHope.", "A heart still beating.\nOne, two, three…", "I fall down on my knees.\nI scream.\nI cry.", "Look, all this is for you,\nAll my body parts laying on the table of our living room.", "Look, all this is for you,\nMy soul, my spirit, my sanity.", "But you’re already halfway out the door,\nLocking eyes with another shadow with big eyelashes and black eyes.", "And there I stand,\nBodiless.\nSoulless.", "Last night,\nmy subconscious gave back a piece of my soul I thought I’d lost forever.", "In the dream, the world was divided into two processions.", "Two crowds. Two ways of being.\nTo my left—\nthe shadows.", "Black suits.", "Slow footsteps.", "Straight backs.", "Faces drained of colour.\nA solemn parade of people who had forgotten how to laugh.", "Joy was childish.", "Laughter, beneath them.\nAnd there you were.", "My back to yours.", "Your back to me.", "Walking deeper into the darkness you had built around yourself.", "I looked at you.", "And for the first time, there was no anger.", "No ache.", "No desperate need to be seen.\nOnly pity.\nA quiet kind.", "You were trapped in a world that refused to let the light in.", "So I turned away.", "And stepped into my own procession.\nColour.", "Sunlight.", "Laughter.", "Running.", "Playing.", "People with their arms thrown carelessly around each other.", "People alive.", "I was wearing a beautiful dress.\nI felt weightless.", "I felt like myself.\nAnd beside me—a girl.\nRadiant.", "Striking.", "Alive.", "She looked like someone I had seen on a screen and somehow dreamed into existence.", "We flirted without fear.\nEyes meeting.\nBreath catching.", "Butterflies taking flight beneath the ribs.", "Then laughter again.\nEasy.\nGolden.", "I tripped.", "For a second, the ground was waiting.\nBut before I reached it, her arms were around my waist.", "I didn’t fall.", "I was held.", "Suspended between the ground and her arms,\nI felt something I had almost forgotten.", "Safety.", "No eggshells.", "No walking carefully.\nNo being called dramatic.", "No shrinking.", "Just being held.", "Cherished.", "Protected.", "Alive.", "I woke with a smile still resting on my face.", "Something light swelling inside my chest.\nAnd I understood.", "For two years,\nI had mistaken crumbs for a feast.", "I had starved so quietly that I began to believe the hunger was love.", "Maybe that was the piece of my soul the dream returned.", "Not a girl.", "Not a promise.", "Not even love.", "The knowledge that joy\nwas still mine.\nThat my heart\nhad not closed.", "That somewhere inside me, the colourful procession was still moving.", "And perhaps, one day, someone will walk beside me through the sunlight.", "Perhaps she’ll catch me when I fall.\nBut even if she doesn’t—", "I am still\nwalking\ntoward the light.", "Tu te souviens ?", "La première fois\nque nous nous sommes rencontrées.", "Toi, non.", "Parce que moi,\nje t’avais remarquée avant.\nTu étais assise à ton bureau,\nchemise blanche,\nles yeux baissés sur tes feuilles,", "un peu stressée,\nun peu ailleurs,\nun petit soupir\nau bord des lèvres.", "Je t’ai vue.", "Et lorsque tu as relevé la tête,\nsans même savoir que j’existais,\nj’ai suivi ton regard—", "qui parcourait la pièce,\ns’attardant sur l’inconnu.", "Je continuais de te regarder.\nSi belle.\nSi délicate.", "Si parfaite.", "Tes yeux.", "Tes lèvres.", "Ton visage.", "Poupée de porcelaine.\nC’est ainsi\nque nos amies\nont commencé à t’appeler\ndès qu’elles t’ont vue.", "Tu riais.", "Tu te tortillais légèrement,\ngênée.\nInnocente.", "Lumineuse.", "Belle.", "Intelligente aussi.\nTu te souviens ?\nLa première fois\nque je t’ai parlé.", "Je n’arrivais pas\nà regarder tes yeux.\nAlors je regardais ton visage\nautrement—", "tes lèvres,\nton menton,\nchaque détail,\ncomme une toile\noù tout était beau.", "Tu souriais.", "Tu riais.", "Tu regardais le sol\nen parlant.\nEncore plus parfaite.", "Ton visage—", "le soleil.", "Le soleil,\naveuglant, froid,\nbeaucoup trop éclatant,\navant la tempête.", "Il y a longtemps.", "Here I am, again.", "There she is—", "darkness,\nwearing a smirk\non her ugly face.", "Again.", "That hollow\ninside my chest\nhas a cruel way\nof opening\nwhen everything else", "is already falling apart.\nThese tears\nhave turned red,\nscratching\nthe thin skin", "of my face.", "Every passerby\nhas eyes.\nSo I want to go home.", "Just as I begin\nto smell the flowers,\nto feel the air\nloosen around my neck—", "there she comes.", "A hand\nrests against\nthe wound\nbehind my back.", "Fingers digging in.\nClaws.\nAgain.", "She still owns me.", "I want to go back.", "I want to go back.", "I want to go back.", "To the moment\nmy eyes met yours.\nI want to tell you—", "of the wars\nwe would wage\nfor love.", "Of the ways\nwe would unmake each other.\nOf the cuts\nyou would leave beneath my skin.", "Of the wound\nthat would grow\ntoo vast\nto live inside.", "Of the knife\nyou would bury\nbetween my shoulder blades\nand leave there,\nbleeding.", "And I scream.", "I scream until\nthe words tear\nout of me.", "Don’t give her\nall of you.\nDon’t disappear\ninside her.", "Don’t—", "I am here.", "I am here.", "What if, in another universe,\nyou are the good one?", "What if, in another universe,\nyou’re me\nand I’m you?", "And when the time comes,\nwe ask for more.\nMore hours.", "Minutes.", "Seconds.", "We would trade\nyears of our lives\nfor one minute more.", "Maybe that’s how\npacts with the devil began.", "Years ago.", "Four in the morning.\nThe kitchen floor.\nTears on the tiles.", "A voice\nbarely recognizable.\nPlease.", "Save my brother.", "Three months ago.", "Begging\nfor someone\nwho didn’t want me back.", "Please.", "Make her stay.", "Today,\nI say goodbye\nto my mother.", "And suddenly—", "I understand\nwhat I was willing\nto leave behind.", "It wasn’t just\ncontinents.\nIt was everything.", "For someone\nwho doesn’t even\nsay hello anymore.", "Tonight,\nI came home alone.\nThe apartment\nwas still hers,\nbut she wasn’t.", "I cried\nfor a minute.\nThen—", "nothing.", "Ten minutes later,\nI was okay.\nAnd for once,\nI didn’t ask why.", "Why am I okay?", "Shouldn’t I be sadder?\nI let myself be okay.", "And I wondered—", "when did peace\nbecome suspicious?\nHow sad\nmust I have been\nfor silence", "to feel like a warning?\nMaybe I’m waiting\nfor the other shoe.", "Maybe I’m afraid\nthat if I stop hurting,\nI’ll forget\nwhat happened.", "But tonight,\nI let the okay be okay.\nSometimes,\nwhen I look at you\nwhile you’re talking,", "I look away.", "Not because\nI want you.\nBecause I’m afraid\nI might,\nif I let myself", "look too long.", "So I don’t.", "I don’t feed\nwhat doesn’t deserve\nto grow.", "Your questions\nare still sitting\nsomewhere inside me.", "The ones about\nhow I made myself smaller.\nI haven’t forgotten.", "I’m just not ready\nto answer yet.\nMaybe that’s okay, too.", "I see people walking down the street.\nI wonder.", "What is their story?\nBut lately, my eyes spot particularly those who come in two.", "What are they?", "Soulmates? Family? Friends?\nI wonder.\nThis phenomenon has been happening to me\nsince my body was split from my two.", "See, not long ago, I came in two as well.\nWhen out for a walk.", "When grocery shopping.\nWhen sightseeing.\nWhen laughing.", "Crying.", "Everywhere I went, there were two of us.\nAnd then—", "crrrrp.", "The seam gave way.", "Ouch.", "That hurt badly.", "A lot.", "I bled.", "A little.", "A lot.", "Now,\nI see those who come in two and I wonder:\nWill I ever become two again?", "Or maybe—", "one piece is enough?\nOne whole\ninstead of\ntwo halves.", "What a strange thing,\nto have so little time on earth\nand still find ways\nto hurt one another.", "My winter.", "The cold morning breeze\non my way to university.", "The butterflies in my chest,\ntrapped behind my ribs,\nwith nowhere to go.", "The tender gaze\nthat pierced my soul.\nThey had no idea that,\nduring our breaks, between classes,\nwhile I drew their eyes", "on my notebook,\nthey were changing\nmy whole being.", "They went about their day,\nleaving the classroom door open\nas they walked away,\nwithout ever knowing.", "They walked past me\nand gave me a smile\nthat drew a line\nbetween our silhouettes.", "They never noticed\nhow their hand brushed against mine\nas they explained computer tricks to me,\nan accidental touch\nthat ignited a volcano", "inside my chest.", "If only they knew\nwhat they changed in me.\nI waited for them\nat the university gate,\na gravity pen in one hand", "and a small painting of them\nin the other.\nSurely, a version of me\nis still waiting there,\nat the gate,", "hoping they would walk by\nand that this time,\nthe line between our silhouettes\nwould fade\nas they took my hand", "and told me\nthey had noticed everything.\nIn every love that came after,\nI wondered—", "were they the one?", "And if I stood before them again,\nif I looked into their eyes,\nwould I fall in love\nall over again?"];
+const INTRO=`Here I am.
 
-const NS='http://www.w3.org/2000/svg', W=1600, H=900, N=FR.length;
-function rng(s){ if(typeof s==='string'){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;s=h;} return ()=>(s=(s*1664525+1013904223)>>>0)/4294967296; }
-const r=rng(11);
-// impact points: shards are smaller and denser near them
-const imp=[[420,300],[1150,560],[800,140]], sites=[];
-while(sites.length<N){
-  let x,y;
-  if(sites.length<N*0.72){ const c=imp[sites.length%3], a=r()*6.283, d=Math.pow(r(),1.5)*560+25; x=c[0]+Math.cos(a)*d*1.35; y=c[1]+Math.sin(a)*d; }
-  else { x=r()*W; y=r()*H; }
-  if(x<12||x>W-12||y<12||y>H-12) continue;
-  if(sites.some(s=>Math.hypot(s[0]-x,s[1]-y)<15)) continue;
-  sites.push([x,y]);
-}
-function clip(poly,a,b){
-  const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,nx=b[0]-a[0],ny=b[1]-a[1], side=p=>(p[0]-mx)*nx+(p[1]-my)*ny, out=[];
-  for(let i=0;i<poly.length;i++){ const p=poly[i],q=poly[(i+1)%poly.length],sp=side(p),sq=side(q);
-    if(sp<=0) out.push(p);
-    if((sp<0&&sq>0)||(sp>0&&sq<0)){ const t=sp/(sp-sq); out.push([p[0]+(q[0]-p[0])*t,p[1]+(q[1]-p[1])*t]); } }
-  return out;
-}
-const rd=v=>Math.round(v*10)/10;
-const cells=sites.map((s,i)=>{ let poly=[[0,0],[W,0],[W,H],[0,H]]; sites.forEach((o,j)=>{ if(i!==j&&poly.length) poly=clip(poly,s,o); }); return poly.map(p=>[rd(p[0]),rd(p[1])]); });
-const area=p=>Math.abs(p.reduce((a,q,i)=>{const n=p[(i+1)%p.length];return a+q[0]*n[1]-n[0]*q[1];},0))/2;
+Archiving yet another part of my life that I cannot keep inside me anymore. It has taken up too much of me.
 
-// jagged edges, identical on both sides of a shared edge
+I wanted to archive the part of my life when I did not want to live.
+
+The depression.
+
+I carried it anyway.
+
+One step. Then another.
+
+Years ago, in high school, I wrote "Per aspera ad astra" in the corner of my textbook. Through hardships to the stars. I didn't know then what my "aspera" would be. I think I know now. This was it.
+
+And somehow, I am still here.
+
+A trace. Evidence of the days when I did not want to be here, and the fact that I am here anyway.
+
+So, Hello. I'm Anna. Or at least, this is a part of me. A digital fragment.
+
+Perhaps, if you enter this space, you will recognize something there. A little shard you never noticed falling.
+
+Be gentle with it. It is still me.`;
+const PRO=`These here, are pieces of me, written during the worst period of my life.
+
+For some context, I have always been a depressed girl.
+
+The sad girl.
+
+The girl who cries when her favourite show ends, when a friend gives her her favourite Sharpie so she can finish her drawing, when something beautiful comes to an end and she wasn't ready for it to.
+
+Depression has met me several times throughout my life. And every time, She took something with her.
+Pieces of me that I never found again.
+But somehow, I always found other ways to live without them.
+
+This time, though, was different.
+
+This time, my whole soul was crushed. Disappeared even.
+
+You know that feeling when you break something you promised yourself you wouldn't break? That vase you've had for years, perhaps. The one you are so careful with because you tell yourself, I'm not stupid enough to break this.
+And then you do.
+And suddenly you're on the floor, desperately trying to save it. Picking up the pieces. Counting them. Trying to fit one against another. Maybe even finding some glue, because surely, surely, if you're careful enough, if you take your time, you can put it back together.
+And maybe you can.
+Mostly.
+But then you notice them.
+
+The microscopic shards.
+
+The pieces so small that you didn't even notice them breaking away.
+And no matter how good a bricoleur you are, there is no way to glue those back together.
+They're too small.
+Too light.
+And before you even have the chance to reach for them, the breeze coming through your window catches them and carries them away.
+Into the deepest corners of your furniture.
+Under your bed.
+Between the cracks in the floor.
+Places you'll probably never look.
+Places you will never know how to reach.
+
+See?
+
+This was like that.
+Little shards.
+Dust, even.
+
+Pieces of me falling away while I stood there and watched myself break apart.
+
+Watched myself become less and less.
+And I couldn't do anything about it.
+
+And this?
+
+Because of one person.
+One person out of eight billion.
+
+Her.`;
+const IDLE_RESET_MS=0; // gallery: e.g. 180000 = restart after 3 quiet minutes (0 = off)
+const KEY='shardsSeen3', NS='http://www.w3.org/2000/svg', $=i=>document.getElementById(i);
+const portrait=innerHeight>innerWidth, W=portrait?900:1600, H=portrait?1600:900, N=FR.length;
+$('mesh').setAttribute('viewBox',`0 0 ${W} ${H}`);
+addEventListener('resize',()=>{if((innerHeight>innerWidth)!==portrait){clearTimeout(window._rz);window._rz=setTimeout(()=>location.reload(),400)}});
+function rng(s){if(typeof s==='string'){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;s=h}return()=>(s=(s*1664525+1013904223)>>>0)/4294967296}
+// ---- dust
+(function(){const c=$('dust'),x=c.getContext('2d');let P=[];function rs(){c.width=innerWidth;c.height=innerHeight}addEventListener('resize',rs);rs();
+for(let i=0;i<75;i++)P.push({x:Math.random()*c.width,y:Math.random()*c.height,s:Math.random()*1.5+.4,a:Math.random()*.6+.1,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25});
+(function f(){x.clearRect(0,0,c.width,c.height);for(const p of P){p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>c.width||p.y<0||p.y>c.height){p.x=Math.random()*c.width;p.y=Math.random()*c.height}x.fillStyle=`rgba(245,200,100,${p.a})`;x.beginPath();x.arc(p.x,p.y,p.s,0,6.283);x.fill()}requestAnimationFrame(f)})()})();
+// ---- the broken screen: the big cracks of the first version, then smaller cracks inside every big shard
+const r=rng(11),rd=v=>Math.round(v*10)/10,imp=[[.26*W,.33*H],[.72*W,.62*H],[.5*W,.15*H]];
+const BASE=[[[0,0],[480,0],[260,180],[0,310]],[[480,0],[920,0],[710,130],[260,180]],[[920,0],[1600,0],[1280,210],[710,130]],[[0,310],[260,180],[430,340],[180,480],[0,420]],[[260,180],[710,130],[590,290],[430,340]],[[710,130],[1280,210],[1020,330],[590,290]],[[1280,210],[1600,0],[1600,380],[1390,390],[1020,330]],[[180,480],[430,340],[590,290],[510,510]],[[590,290],[1020,330],[1140,520],[510,510]],[[1020,330],[1390,390],[1600,380],[1600,560],[1140,520]],[[0,420],[180,480],[230,680],[0,650]],[[180,480],[510,510],[390,710],[230,680]],[[510,510],[1140,520],[890,730],[390,710]],[[1140,520],[1600,560],[1370,720],[890,730]],[[1600,560],[1600,900],[1480,900],[1370,720]],[[0,650],[230,680],[190,900],[0,900]],[[230,680],[390,710],[490,900],[190,900]],[[390,710],[890,730],[670,900],[490,900]],[[890,730],[1120,900],[670,900]],[[890,730],[1370,720],[1120,900]],[[1370,720],[1480,900],[1120,900]]];
+const tx=p=>portrait?[900-p[1],p[0]]:[p[0],p[1]],P0=BASE.map(q=>q.map(tx));
+const area=p=>Math.abs(p.reduce((a,q,i)=>{const n=p[(i+1)%p.length];return a+q[0]*n[1]-n[0]*q[1]},0))/2;
 const cache=new Map();
-function edge(p,q){
-  const a=p.join(),b=q.join(), fwd=a<b, key=fwd?a+'|'+b:b+'|'+a;
-  if(!cache.has(key)){
-    const [s,e]=fwd?[p,q]:[q,p], rr=rng(key), len=Math.hypot(e[0]-s[0],e[1]-s[1])||1, k=Math.max(1,Math.floor(len/48)), nx=-(e[1]-s[1])/len, ny=(e[0]-s[0])/len, pts=[];
-    for(let i=1;i<k;i++){ const t=i/k, off=(rr()-.5)*Math.min(9,len*.07); pts.push([s[0]+(e[0]-s[0])*t+nx*off,s[1]+(e[1]-s[1])*t+ny*off]); }
-    cache.set(key,pts);
-  }
-  const pts=cache.get(key); return fwd?pts:pts.slice().reverse();
-}
-const jag=poly=>{ const o=[]; poly.forEach((p,i)=>{ o.push(p); const q=poly[(i+1)%poly.length]; if(p[0]===0&&q[0]===0||p[0]===W&&q[0]===W||p[1]===0&&q[1]===0||p[1]===H&&q[1]===H) return; o.push(...edge(p,q)); }); return o; };
-
-// short fragments go to small shards, long ones to large shards
-const order=cells.map((c,i)=>i).sort((a,b)=>area(cells[a])-area(cells[b]));
-const frs=FR.map((t,i)=>i).sort((a,b)=>FR[a].length-FR[b].length);
-for(let i=1;i<N;i++) if(r()<.3){ const t=frs[i]; frs[i]=frs[i-1]; frs[i-1]=t; }
-const textFor=[]; order.forEach((ci,k)=>textFor[ci]=FR[frs[k]]);
-
-const mesh=document.getElementById('mesh'), ov=document.getElementById('ov'), card=document.getElementById('card'), frag=document.getElementById('frag'), sp=document.getElementById('sp');
-const starKeys=new Set(); let seenCount=0, sawShown=false;
-function addStars(poly){ poly.forEach((p,k)=>{ const key=p.join(); if(starKeys.has(key)) return; starKeys.add(key);
-  const c=document.createElementNS(NS,'circle'); c.setAttribute('cx',p[0]); c.setAttribute('cy',p[1]); c.setAttribute('r',2.4); c.setAttribute('class','star'); mesh.appendChild(c); setTimeout(()=>c.style.opacity=1,150+k*130); }); }
-function shape(seed){ const q=rng(seed), R=(a,b)=>a+q()*(b-a);
-  const P=[[R(0,6),R(4,14)],[R(8,20),0],[R(40,60),R(0,3)],[R(78,92),0],[100,R(6,16)],[R(96,100),R(40,60)],[100,R(84,94)],[R(80,92),100],[R(44,60),R(97,100)],[R(10,22),100],[0,R(86,96)],[R(0,3),R(40,60)]];
-  return P.map(p=>p.map(n=>n.toFixed(1)).join(',')).join(' '); }
-
-cells.forEach((poly,i)=>{
-  const g=document.createElementNS(NS,'g'); g.setAttribute('class','sh');
-  const p=document.createElementNS(NS,'polygon'); p.setAttribute('points',jag(poly).map(v=>v[0].toFixed(1)+','+v[1].toFixed(1)).join(' ')); g.appendChild(p);
-  g.addEventListener('click',()=>open(i,g,poly)); mesh.appendChild(g);
-});
-
-function open(i,g,poly){
-  const text=textFor[i], len=text.length;
-  sp.setAttribute('points',shape('k'+i));
-  frag.style.fontSize = len<16 ? 'clamp(2.6rem,6vw,4rem)' : len<90 ? 'clamp(1.9rem,3.4vw,2.6rem)' : 'clamp(1.5rem,2.5vw,2rem)';
-  card.style.minHeight = len<16 ? '26vh' : len<90 ? '32vh' : '40vh';
-  frag.classList.remove('lit'); frag.innerHTML='';
-  text.split('\n').forEach((l,k)=>{ const d=document.createElement('span'); d.className='ln'; d.textContent=l===''?'\u00a0':l; d.style.transitionDelay=(0.5+k*0.2)+'s'; frag.appendChild(d); });
-  frag.scrollTop=0;
-  const b=g.getBoundingClientRect();
-  card.style.setProperty('--fx',(b.left+b.width/2-innerWidth/2)+'px'); card.style.setProperty('--fy',(b.top+b.height/2-innerHeight/2)+'px');
-  ov.classList.add('open'); requestAnimationFrame(()=>requestAnimationFrame(()=>frag.classList.add('lit')));
-  if(!g.classList.contains('seen')){ g.classList.add('seen'); addStars(poly); seenCount++;
-    if(seenCount>=40&&!sawShown){ sawShown=true; const s=document.getElementById('saw'); setTimeout(()=>s.classList.add('on'),2500); setTimeout(()=>s.classList.remove('on'),9000); } }
-}
-const close=()=>ov.classList.remove('open');
-document.getElementById('x').addEventListener('click',close);
-ov.addEventListener('click',e=>{ if(e.target===ov) close(); });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') close(); });
-</script>
-</body>
-</html>
+function edge(p,q){const a=p.join(),b=q.join(),f=a<b,k=f?a+'|'+b:b+'|'+a;if(!cache.has(k)){const[s,e]=f?[p,q]:[q,p],rr=rng(k),len=Math.hypot(e[0]-s[0],e[1]-s[1])||1,n=Math.max(1,Math.floor(len/48)),nx=-(e[1]-s[1])/len,ny=(e[0]-s[0])/len,o=[];
+for(let i=1;i<n;i++){const t=i/n,off=(rr()-.5)*Math.min(9,len*.07);o.push([s[0]+(e[0]-s[0])*t+nx*off,s[1]+(e[1]-s[1])*t+ny*off])}cache.set(k,o)}const o=cache.get(k);return f?o:o.slice().reverse()}
+const onB=(p,q)=>p[0]===0&&q[0]===0||p[0]===W&&q[0]===W||p[1]===0&&q[1]===0||p[1]===H&&q[1]===H;
+const bnd=poly=>{const o=[];poly.forEach((p,i)=>{o.push([p[0],p[1],1]);const q=poly[(i+1)%poly.length];if(!onB(p,q))edge(p,q).forEach(v=>o.push([v[0],v[1],0]))});return o};
+const prim=new Map();P0.forEach(poly=>poly.forEach((p,i)=>{const q=poly[(i+1)%poly.length],a=p.join(),b=q.join(),k=a<b?a+'|'+b:b+'|'+a;if(!prim.has(k))prim.set(k,onB(p,q)?[p,q]:[p,...edge(p,q),q])}));
+const chords=[];
+function split(poly){const n=poly.length,L=poly.map((p,i)=>Math.hypot(poly[(i+1)%n][0]-p[0],poly[(i+1)%n][1]-p[1])),tot=L.reduce((a,b)=>a+b,0);
+for(let tr=0;tr<12;tr++){const pick=()=>{let t=r()*tot,i=0;while(i<n-1&&t>L[i]){t-=L[i];i++}return i};let i=pick(),j=pick();if(i===j)continue;if(i>j)[i,j]=[j,i];
+const A=poly[i],A2=poly[(i+1)%n],B=poly[j],B2=poly[(j+1)%n],ti=.15+r()*.7,tj=.15+r()*.7;
+const a=[rd(A[0]+(A2[0]-A[0])*ti),rd(A[1]+(A2[1]-A[1])*ti),1],b=[rd(B[0]+(B2[0]-B[0])*tj),rd(B[1]+(B2[1]-B[1])*tj),1];
+const len=Math.hypot(b[0]-a[0],b[1]-a[1]),k=Math.floor(len/40),nx=-(b[1]-a[1])/len,ny=(b[0]-a[0])/len,jit=[];
+for(let m=1;m<k;m++){const t=m/k,off=(r()-.5)*Math.min(8,len*.08);jit.push([rd(a[0]+(b[0]-a[0])*t+nx*off),rd(a[1]+(b[1]-a[1])*t+ny*off),0])}
+const p1=[a,...poly.slice(i+1,j+1),b,...jit.slice().reverse()],p2=[b,...poly.slice(j+1),...poly.slice(0,i+1),a,...jit],a1=area(p1),a2=area(p2);
+if(Math.min(a1,a2)<.1*(a1+a2))continue;chords.push([a,...jit,b]);return[p1,p2]}return null}
+const cells=P0.map(bnd);
+for(let g=0;cells.length<N&&g<30000;g++){const w=cells.map(p=>Math.pow(area(p),.6));let t=r()*w.reduce((a,b)=>a+b,0),k=0;while(k<cells.length-1&&t>w[k]){t-=w[k];k++}const sp=split(cells[k]);if(sp)cells.splice(k,1,...sp)}
+// short fragments go to small shards, long fragments to large ones
+const ord=cells.map((c,i)=>i).sort((a,b)=>area(cells[a])-area(cells[b])),fo=FR.map((t,i)=>i).sort((a,b)=>FR[a].length-FR[b].length);
+for(let i=1;i<N;i++)if(r()<.3){const t=fo[i];fo[i]=fo[i-1];fo[i-1]=t}
+const textFor=[];ord.forEach((ci,k)=>textFor[ci]=FR[fo[k]]);
+let seen=new Set();try{seen=new Set(JSON.parse(localStorage.getItem(KEY)||'[]'))}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify([...seen]))}catch(e){}};
+const mesh=$('mesh'),mg=$('mg'),stk=new Set();
+function stars(){}
+const groups=cells.map((poly,i)=>{const g=document.createElementNS(NS,'g');g.setAttribute('class','sh');const p=document.createElementNS(NS,'polygon');p.setAttribute('points',poly.map(v=>v[0].toFixed(1)+','+v[1].toFixed(1)).join(' '));g.appendChild(p);g.addEventListener('click',()=>openShard(i));mg.appendChild(g);return g});
+// ---- the reading shard
+const ov=$('ov'),card=$('card'),frag=$('frag'),sp=$('sp');
+function shape(seed){const q=rng(seed),R=(a,b)=>a+q()*(b-a);const P=[[R(0,6),R(4,14)],[R(8,20),0],[R(40,60),R(0,3)],[R(78,92),0],[100,R(6,16)],[R(96,100),R(40,60)],[100,R(84,94)],[R(80,92),100],[R(44,60),R(97,100)],[R(10,22),100],[0,R(86,96)],[R(0,3),R(40,60)]];return P.map(p=>p.map(n=>n.toFixed(1)).join(',')).join(' ')}
+function openCard(text,seed,from){const len=text.length;sp.setAttribute('points',shape(seed));
+frag.style.fontSize=len<16?'clamp(2.6rem,6vw,4rem)':len<90?'clamp(1.9rem,3.4vw,2.6rem)':len<400?'clamp(1.5rem,2.5vw,2rem)':'clamp(1.3rem,2vw,1.6rem)';
+card.style.minHeight=len<16?'26vh':len<90?'32vh':'40vh';frag.classList.remove('lit');frag.innerHTML='';
+text.split('\n').forEach((l,k)=>{const d=document.createElement('span');d.className='ln';d.textContent=l===''?'\u00a0':l;d.style.transitionDelay=Math.min(.5+k*.2,7)+'s';frag.appendChild(d)});frag.scrollTop=0;
+if(from){const b=from.getBoundingClientRect();card.style.setProperty('--fx',(b.left+b.width/2-innerWidth/2)+'px');card.style.setProperty('--fy',(b.top+b.height/2-innerHeight/2)+'px')}else{card.style.setProperty('--fx','0px');card.style.setProperty('--fy','0px')}
+ov.classList.add('open');requestAnimationFrame(()=>requestAnimationFrame(()=>frag.classList.add('lit')))}
+const closeCard=()=>ov.classList.remove('open');
+$('x').onclick=closeCard;ov.addEventListener('click',e=>{if(e.target===ov)closeCard()});addEventListener('keydown',e=>{if(e.key==='Escape')closeCard()});
+let sawShown=0;
+function openShard(i){crack(.03);openCard(textFor[i],'k'+i,groups[i]);
+if(!seen.has(i)){seen.add(i);save();groups[i].classList.add('seen');stars(cells[i]);
+if(seen.size>=N&&!sawShown){sawShown=1;setTimeout(()=>$('saw').classList.add('on'),2500);setTimeout(()=>$('saw').classList.remove('on'),9000);setTimeout(()=>{seen=new Set();save()},12000)}}}
+$('pro').onclick=()=>openCard(INTRO+'\n\n* * *\n\n'+PRO,'prologue',$('pro'));
+// ---- sound
+let ac,master,noiseG,rev,started=0,muted=0;const NOTES=[196,220,246.94,293.66,329.63,392,440,493.88,587.33,659.25],prog=()=>Math.min(1,seen.size/60);
+function tone(f,v,a=2.5,rl=7){if(!started)return;const t=ac.currentTime,o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+a);g.gain.exponentialRampToValueAtTime(.0001,t+a+rl);o.connect(g);g.connect(rev);o.start(t);o.stop(t+a+rl+.1)}
+function crack(vol){if(!started||muted)return;const sr=ac.sampleRate,t0=ac.currentTime,tot=1.5+Math.random()*2.5,pan=ac.createStereoPanner();pan.pan.value=Math.random()*2-1;pan.connect(rev);
+const cl=Math.floor(sr*tot),cb=ac.createBuffer(1,cl,sr),cd=cb.getChannelData(0);for(let k=0;k<cl;k++)cd[k]=Math.random()<.004?Math.random()*2-1:0;
+const cs=ac.createBufferSource();cs.buffer=cb;const bp=ac.createBiquadFilter();bp.type='bandpass';bp.Q.value=7;bp.frequency.setValueAtTime(700+Math.random()*600,t0);bp.frequency.exponentialRampToValueAtTime(1800+Math.random()*1800,t0+tot);
+const g=ac.createGain();g.gain.setValueAtTime(.0001,t0);g.gain.linearRampToValueAtTime(vol*1.6,t0+tot*.45);g.gain.linearRampToValueAtTime(.0001,t0+tot);cs.connect(bp);bp.connect(g);g.connect(pan);cs.start(t0);
+let t=.05+Math.random()*.2;while(t<tot){const l=Math.floor(sr*.03),b=ac.createBuffer(1,l,sr),d=b.getChannelData(0);for(let k=0;k<l;k++)d[k]=(Math.random()*2-1)*Math.pow(1-k/l,2);
+const s=ac.createBufferSource();s.buffer=b;const f=ac.createBiquadFilter();f.type='bandpass';f.Q.value=18;f.frequency.value=3200+Math.random()*5000;const gg=ac.createGain();gg.gain.value=vol*(.6+Math.random()*.8)*(1-t/tot);s.connect(f);f.connect(gg);gg.connect(pan);s.start(t0+t);t+=.05+Math.pow(Math.random(),2)*.4*(1+t)}}
+function startSound(){if(started)return;started=1;try{ac=new(window.AudioContext||window.webkitAudioContext)();const t=ac.currentTime;master=ac.createGain();master.gain.setValueAtTime(0,t);master.gain.linearRampToValueAtTime(1,t+6);master.connect(ac.destination);
+const L=ac.sampleRate*4,ir=ac.createBuffer(2,L,ac.sampleRate);for(let c=0;c<2;c++){const d=ir.getChannelData(c);for(let i=0;i<L;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/L,3)}
+const cv=ac.createConvolver();cv.buffer=ir;const wet=ac.createGain();wet.gain.value=.7;rev=ac.createGain();rev.connect(master);rev.connect(cv);cv.connect(wet);wet.connect(master);
+const S=ac.sampleRate*2,nb=ac.createBuffer(1,S,ac.sampleRate),o=nb.getChannelData(0);let last=0;for(let i=0;i<S;i++){last=(last+.02*(Math.random()*2-1))/1.02;o[i]=last*3.5}
+const ns=ac.createBufferSource();ns.buffer=nb;ns.loop=true;const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=170;noiseG=ac.createGain();noiseG.gain.value=.08;ns.connect(lp);lp.connect(noiseG);noiseG.connect(master);ns.start();
+const hum=ac.createGain();hum.gain.value=.03;[55,55.4].forEach(f=>{const q=ac.createOscillator();q.frequency.value=f;q.connect(hum);q.start()});hum.connect(master);
+const lf=ac.createOscillator(),ld=ac.createGain();lf.frequency.value=.07;ld.gain.value=.012;lf.connect(ld);ld.connect(hum.gain);lf.start();
+setInterval(()=>{if(muted)return;const p=prog();noiseG.gain.setTargetAtTime(.08-.05*p,ac.currentTime,4);if(seen.size>0&&Math.random()<.2+.6*p)tone(NOTES[Math.floor(Math.random()*NOTES.length)],.012+.02*p)},4000);
+(function amb(){setTimeout(()=>{if(!ov.classList.contains('open'))crack(.006+.012*(1-prog()));amb()},18000+Math.random()*30000)})()}catch(e){started=0}}
+$('snd').onclick=()=>{if(!started)return;muted=!muted;master.gain.cancelScheduledValues(ac.currentTime);master.gain.setTargetAtTime(muted?0:1,ac.currentTime,.4);$('snd').classList.toggle('act',!muted);$('sl').textContent=muted?'Sound off':'Sound on'};
+// ---- SOUL: a tap starts the sound and the screen breaks
+$('soulBtn').onclick=()=>{if($('s1').classList.contains('hide'))return;startSound();if(started){$('snd').classList.add('act');$('sl').textContent='Sound on'}$('s1').classList.add('hide');setTimeout(shatter,1600)};
+// the screen breaks everywhere at once: every crack starts at its own moment
+function shatter(){
+if(matchMedia('(pointer:coarse)').matches)mg.removeAttribute('filter');
+const SPEED=240,SP2=150,O=[...imp,...Array.from({length:6},()=>[Math.random()*W,Math.random()*H])].map(o=>({x:o[0],y:o[1],t:Math.random()*4}));
+const T=v=>{let b=1e9;for(const o of O){const d=o.t+Math.hypot(v[0]-o.x,v[1]-o.y)/SPEED;if(d<b)b=d}return b};
+const cr=document.createElementNS(NS,'g');cr.style.strokeWidth=1/Math.max(innerWidth/W,innerHeight/H);mg.appendChild(cr);const els=[];let mx=0;
+const add=(pts,t0,sp)=>{const el=document.createElementNS(NS,'path');el.setAttribute('class','cr');el.setAttribute('d','M'+pts.map(v=>v[0].toFixed(1)+','+v[1].toFixed(1)).join('L'));cr.appendChild(el);els.push([el,t0,sp])};
+prim.forEach(pts=>{if(T(pts[0])>T(pts[pts.length-1]))pts=pts.slice().reverse();add(pts,T(pts[0]),SPEED)});
+chords.forEach(pts=>add(pts,Math.min(T(pts[0]),T(pts[pts.length-1]))+1.5+Math.random()*3.5,SP2));
+els.forEach(a=>{const L=a[0].getTotalLength();a[0].style.strokeDasharray=L;a[0].style.strokeDashoffset=L;a[3]=L/a[2];mx=Math.max(mx,a[1]+a[3])});
+mesh.getBoundingClientRect();try{$('wobA').beginElement()}catch(e){}
+els.forEach(a=>{a[0].style.transition=`stroke-dashoffset ${a[3]}s linear ${a[1]}s`});mesh.classList.add('on');
+requestAnimationFrame(()=>els.forEach(a=>a[0].style.strokeDashoffset=0));
+O.forEach(o=>setTimeout(()=>crack(.02),o.t*1000));
+setTimeout(()=>{const ps=[...document.querySelectorAll('.sh polygon')];ps.forEach(p=>p.style.transition='none');mesh.classList.remove('cracking');cr.remove();mg.removeAttribute('filter');
+requestAnimationFrame(()=>requestAnimationFrame(()=>ps.forEach(p=>p.style.transition='')));
+mesh.classList.add('reveal');setTimeout(()=>seen.forEach(i=>setTimeout(()=>groups[i].classList.add('seen'),Math.random()*4500)),1800);setTimeout(()=>mesh.classList.remove('reveal'),11000);
+$('hd').classList.add('on');$('intro').classList.add('done')},Math.max(mx+1.2,12.4)*1000)}
+if(IDLE_RESET_MS){let la=Date.now();['pointerdown','pointermove','keydown','wheel'].forEach(e=>addEventListener(e,()=>la=Date.now(),{passive:true}));setInterval(()=>{if(Date.now()-la>IDLE_RESET_MS){try{localStorage.removeItem(KEY)}catch(e){}location.reload()}},5000)}
+</script></body></html>
