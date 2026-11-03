@@ -57,6 +57,21 @@ body{background:#050508;color:#f1f5f9;font-family:Georgia,serif;overflow:hidden;
 #saw{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;font-size:clamp(1.2rem,3vw,1.8rem);letter-spacing:.15em;color:rgba(241,245,249,.75);opacity:0;pointer-events:none;transition:opacity 3s}
 #saw.on{opacity:1}
 @media(max-width:768px){#frag{padding:2.6rem 2.2rem}}
+/* thinner letters */
+#frag{color:rgba(226,232,240,.82)}
+.soul text{font-weight:300}
+
+/* a warm, yellowish hue on the shards that have been read */
+.sh.seen polygon{fill:rgba(255,226,160,.07);stroke:rgba(255,226,160,.6)}
+.sh.seen:hover polygon{fill:rgba(255,226,160,.14);stroke:rgba(255,240,200,.95)}
+
+/* the same warm hue on the SOUL shard */
+.soul polygon{fill:rgba(255,226,160,.05);stroke:rgba(255,226,160,.8)}
+.soul:hover polygon{fill:rgba(255,226,160,.1)}
+
+/* no star button */
+#x{display:none}
+ 
 </style></head><body>
 <canvas id="dust"></canvas>
 <svg id="mesh" class="cracking" preserveAspectRatio="xMidYMid slice" aria-label="A broken screen. Each shard holds a fragment."><defs><filter id="wob" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.012 0.018" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="10" xChannelSelector="R" yChannelSelector="G"><animate id="wobA" attributeName="scale" from="10" to="0" dur="12s" begin="indefinite" fill="freeze"/></feDisplacementMap></filter></defs><g id="mg" filter="url(#wob)"></g></svg>
@@ -198,6 +213,7 @@ if(from){const b=from.getBoundingClientRect();card.style.setProperty('--fx',(b.l
 ov.classList.add('open');requestAnimationFrame(()=>requestAnimationFrame(()=>frag.classList.add('lit')))}
 const closeCard=()=>ov.classList.remove('open');
 $('x').onclick=closeCard;ov.addEventListener('click',e=>{if(e.target===ov)closeCard()});addEventListener('keydown',e=>{if(e.key==='Escape')closeCard()});
+ frag.addEventListener('click',()=>{if(frag.scrollHeight<=frag.clientHeight+2)closeCard()});
 let sawShown=0;
 function openShard(i){crack(.03);openCard(textFor[i],'k'+i,groups[i]);
 if(!seen.has(i)){seen.add(i);save();groups[i].classList.add('seen');stars(cells[i]);
